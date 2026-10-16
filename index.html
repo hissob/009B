@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Б009</title>
+<!--
+  Б009 («Доллар») · приложение и консоль · только Supabase, схема b009.
+  Ключ ниже — публичный anon. Без входа он не открывает ничего:
+  таблицы закрыты, каждая функция проверяет вход и права.
+-->
+<style>
+:root{--bg:#0e1014;--c:#171a21;--c2:#1f232c;--l:#2a2f3a;--t:#e8eaef;--m:#8a909c;--ok:#36d07d;--bad:#ff6b6b;--acc:#a78bfa;--y:#f5c451;--b:#4a9eff}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--t);font:15px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;-webkit-text-size-adjust:100%}
+.app{max-width:520px;margin:0 auto;padding:14px 16px calc(28px + env(safe-area-inset-bottom))}
+h1{font-size:21px;margin:0}.mu{color:var(--m);font-size:12px}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tabs{display:flex;gap:6px;margin:14px 0 10px;overflow-x:auto}
+.tabs button{flex:1;min-width:64px;padding:9px 4px;border-radius:12px;background:var(--c);border:1px solid var(--l);color:var(--m);font-weight:700;font-size:13px}
+.tabs button.on{border-color:var(--acc);color:var(--acc)}
+button{font:inherit;cursor:pointer;color:var(--t)}
+.card{background:var(--c);border:1px solid var(--l);border-radius:16px;padding:12px 14px;margin:10px 0}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 0;border-bottom:1px solid var(--l)}.row:last-child{border:0}
+.n{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}.p{color:var(--ok)}.r{color:var(--bad)}.y{color:var(--y)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--c);border:1px solid var(--l);border-radius:14px;padding:10px 12px}
+.tile .k{font-size:11px;color:var(--m)}.tile .v{font-size:19px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+label{display:block;font-size:11px;color:var(--m);margin:10px 0 4px}
+input,select{width:100%;background:var(--c2);border:1px solid var(--l);border-radius:12px;padding:11px 12px;color:var(--t);font:inherit;font-weight:600}
+input:focus,select:focus{outline:none;border-color:var(--acc)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{width:100%;margin-top:14px;background:var(--acc);color:#111;border:0;border-radius:14px;padding:13px;font-weight:800}
+.btn.sec{background:var(--c2);color:var(--t);border:1px solid var(--l)}
+.btn:disabled{opacity:.5}
+.seg{display:flex;gap:6px;margin-top:8px}.seg button{flex:1;padding:9px 4px;border-radius:12px;background:var(--c2);border:1px solid var(--l);font-size:13px;font-weight:700;color:var(--m)}
+.seg button.on{border-color:var(--b);color:var(--b)}.seg button.on.g{border-color:var(--ok);color:var(--ok)}.seg button.on.rr{border-color:var(--bad);color:var(--bad)}
+.leg{border:1px solid var(--l);border-radius:14px;padding:4px 12px 12px;margin-top:10px;background:var(--c)}
+.leg .h{font-size:12px;font-weight:700;color:var(--b);margin-top:8px}
+.it{background:var(--c);border:1px solid var(--l);border-radius:14px;padding:10px 12px;margin:8px 0}
+.it.off{opacity:.45}
+.it .top{display:flex;justify-content:space-between;gap:8px;font-weight:700}.it .meta{font-size:12px;color:var(--m);margin-top:3px}
+.it .sm{font-size:13px;margin-top:4px}
+.pill{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700;background:var(--c2);color:var(--m)}
+.pok{background:rgba(54,208,125,.15);color:var(--ok)}.pw{background:rgba(245,196,81,.15);color:var(--y)}.pb{background:rgba(255,107,107,.15);color:var(--bad)}
+.lnk{color:var(--acc);cursor:pointer;font-size:12px;font-weight:700}
+.ac{position:relative}.ac-list{position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--c2);border:1px solid var(--l);border-radius:12px;margin-top:4px;max-height:220px;overflow:auto;display:none}
+.ac-list div{padding:10px 12px;border-bottom:1px solid var(--l)}.ac-list div:last-child{border:0}
+.note{font-size:12px;color:var(--m);margin-top:8px;line-height:1.5}
+.err{color:var(--bad);font-size:13px;margin-top:8px;min-height:18px}
+.hide{display:none!important}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#2a2f3a;border:1px solid var(--l);border-radius:12px;padding:10px 14px;opacity:0;transition:.18s;pointer-events:none;z-index:9;max-width:92%;text-align:center}
+.toast.on{opacity:1}.toast.bad{background:#3a1d20;color:#ffc2c2}
+.chk{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chk span{padding:7px 11px;border-radius:20px;background:var(--c2);border:1px solid var(--l);font-size:13px;color:var(--m);cursor:pointer}
+.chk span.on{border-color:var(--ok);color:var(--ok)}
+.big{font-size:26px;font-weight:800}
+</style></head>
+<body><div class="app">
+
+<!-- ВХОД -->
+<section id="scrLogin">
+  <h1 style="margin-top:30px">Б009</h1><div class="mu" id="verL"></div>
+  <div class="card">
+    <label>Логин</label><input id="lg" autocomplete="username" autocapitalize="off" spellcheck="false">
+    <label>Пароль</label><input id="pw" type="password" autocomplete="current-password">
+    <button class="btn" id="btnLogin">Войти</button>
+    <div class="err" id="lgErr"></div>
+  </div>
+</section>
+
+<section id="scrApp" class="hide">
+  <div class="hd"><div><h1 id="title">Кассы</h1><div class="mu"><span id="who"></span> · <span id="ver"></span></div></div>
+    <div style="display:flex;gap:6px"><button class="btn sec" style="margin:0;padding:8px 12px;width:auto" id="btnRef">⟳</button>
+    <button class="btn sec" style="margin:0;padding:8px 12px;width:auto" id="btnOut">Выйти</button></div></div>
+  <div class="tabs" id="tabs">
+    <button data-t="K" class="on">Кассы</button><button data-t="V">Ввод</button><button data-t="L">Люди</button>
+    <button data-t="P">Прибыль</button><button data-t="A">Консоль</button>
+  </div>
+
+  <!-- КАССЫ -->
+  <div id="tK">
+    <div class="grid" id="kKassy"></div>
+    <div class="card" id="kSvod"></div>
+    <div class="seg" id="lPer"><button data-p="0" class="on">Сегодня</button><button data-p="1">Вчера</button><button data-p="7">Неделя</button><button data-p="31">Месяц</button></div>
+    <div id="kLenta"></div>
+  </div>
+
+  <!-- ВВОД -->
+  <div id="tV" class="hide">
+    <div class="seg" id="vTip">
+      <button data-v="kl" class="on">Клиент</button><button data-v="tk">Тезер купили</button><button data-v="tp">Тезер продали</button><button data-v="pr">Перемещение</button>
+    </div>
+    <div id="vKl">
+      <label>Человек · из базы или новый</label>
+      <div class="ac"><input id="vIm" autocomplete="off" placeholder="1–2 буквы…"><div class="ac-list" id="vImL"></div></div>
+      <div class="mu" id="vImB"></div>
+      <div class="leg"><div class="h">Касса</div>
+        <div class="seg" id="vKassa"></div>
+        <div class="seg" id="vZn"><button data-z="1" class="on g">Пришло (+)</button><button data-z="-1">Ушло (−)</button></div>
+        <div class="two"><div><label id="vSumL">Сумма</label><input id="vSum" inputmode="decimal" placeholder="0"></div>
+        <div id="vKursW"><label>Курс ₽ за $</label><input id="vKurs" inputmode="decimal" placeholder="88,5"></div></div>
+        <div class="mu" id="vUsd" style="margin-top:6px"></div>
+      </div>
+      <label>Человеку в $ (если с услугой — меньше)</label><input id="vChel" inputmode="decimal" placeholder="считается само">
+    </div>
+    <div id="vTk" class="hide">
+      <div class="leg"><div class="h">Москва · рубли ушли за тезер</div>
+        <div class="two"><div><label>₽</label><input id="tkRub" inputmode="decimal" placeholder="4 372 500"></div><div><label>Курс</label><input id="tkKurs" inputmode="decimal" placeholder="87,45"></div></div>
+        <label>Тезер пришло (USDT)</label><input id="tkUsdt" inputmode="decimal" placeholder="считается само"></div>
+    </div>
+    <div id="vTp" class="hide">
+      <div class="leg"><div class="h">Продали тезер</div>
+        <div class="seg" id="tpKassa"></div>
+        <div class="two"><div><label>$ пришло</label><input id="tpUsd" inputmode="decimal" placeholder="50 200"></div><div><label>%</label><input id="tpPr" inputmode="decimal" placeholder="0,4"></div></div>
+        <label>Тезер ушло (USDT)</label><input id="tpUsdt" inputmode="decimal" placeholder="считается само"></div>
+    </div>
+    <div id="vPr" class="hide">
+      <div class="leg"><div class="h">Из кассы → в кассу</div>
+        <label>Из</label><div class="seg" id="prIz"></div>
+        <label>В</label><div class="seg" id="prV"></div>
+        <div class="two"><div><label id="prSumL">Ушло</label><input id="prSum" inputmode="decimal"></div><div><label id="prPolL">Пришло</label><input id="prPol" inputmode="decimal" placeholder="столько же"></div></div>
+        <div id="prKursW" class="hide"><label>Курс ₽ за $</label><input id="prKurs" inputmode="decimal"></div></div>
+    </div>
+    <div class="two"><div><label>Дата</label><input id="vDen" type="date"></div><div><label>Время</label><input id="vVr" type="time"></div></div>
+    <label>Изох</label><input id="vNote" placeholder="необязательно">
+    <div class="card" id="vItog"></div>
+    <button class="btn" id="btnZap">ЗАПИСАТЬ</button>
+    <div class="err" id="vErr"></div>
+  </div>
+
+  <!-- ЛЮДИ -->
+  <div id="tL" class="hide">
+    <input id="lPoisk" placeholder="Поиск по имени">
+    <div class="card" id="lKred"></div>
+    <div class="card" id="lDolg"></div>
+    <div class="card" id="lZakr"></div>
+    <div id="lIst"></div>
+  </div>
+
+  <!-- ПРИБЫЛЬ -->
+  <div id="tP" class="hide">
+    <div class="two"><div><label>С</label><input id="pOt" type="date"></div><div><label>По</label><input id="pDo" type="date"></div></div>
+    <div class="grid" style="margin-top:10px" id="pTiles"></div>
+    <div class="card" id="pItog"></div>
+    <div class="card" id="pDni"></div>
+    <div class="note">В $ — из сделок: тезер, услуги. Из курса — рубли кассы Москва партиями, как доллары в А009: отдали рубли дороже, чем взяли, — разница прибыль.</div>
+  </div>
+
+  <!-- КОНСОЛЬ -->
+  <div id="tA" class="hide">
+    <div class="card"><b>Люди с доступом</b><div id="aLyudi"></div></div>
+    <button class="btn sec" id="aNew">+ Новый человек</button>
+    <div class="card hide" id="aForm">
+      <b id="aFT">Новый человек</b>
+      <label>Логин</label><input id="aLg" autocapitalize="off" spellcheck="false">
+      <label>Имя</label><input id="aIm">
+      <label>Права</label><div class="chk" id="aPr"></div>
+      <label>Какие кассы видит (ничего не отмечено — все)</label><div class="chk" id="aKs"></div>
+      <label id="aPwL">Пароль</label><input id="aPw" type="password" autocomplete="new-password">
+      <button class="btn" id="aSave">Сохранить</button><button class="btn sec" id="aCancel">Отмена</button>
+      <div class="err" id="aErr"></div>
+    </div>
+    <div class="card"><b>Журнал</b><div id="aLog"></div></div>
+  </div>
+</section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const ВЕРСИЯ = 'Б 1.0';
+const SB = 'https://lyxxbonoycdsulralmfg.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHhib25veWNkc3VscmFsbWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNzcyNTAsImV4cCI6MjEwMzc1MzI1MH0.bHKwEj7z94RKlPGGFGn6vB6W3Nlu99-psz9wvFefRis';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const чт = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } };
+const пш = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
+const ф = (n, д = 0) => (Math.round((Number(n) || 0) * 10 ** д) / 10 ** д).toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: д }).replace(/ /g, ' ');
+const фз = (n, д = 0) => (n > 0 ? '+' : n < 0 ? '−' : '') + ф(Math.abs(n), д);
+const число = s => { const t = String(s || '').replace(/\s/g, '').replace(',', '.'); return t === '' ? null : Number(t); };
+const ВАЛ = { USD: '$', RUB: '₽', USDT: 'USDT' };
+const мскДень = d => new Date(new Date(d).getTime() + 3 * 36e5).toISOString().slice(0, 10);
+const мскВремя = d => new Date(new Date(d).getTime() + 3 * 36e5).toISOString().slice(11, 16);
+const деньРус = д => д.slice(8, 10) + '.' + д.slice(5, 7);
+let ТОК = чт('b9_tok', ''), Я = JSON.parse(чт('b9_me', 'null') || 'null'), СЧЕТА = [], СВОД = null;
+
+function тост(т, плохо) { const e = $('toast'); e.textContent = т || ''; e.className = 'toast on' + (плохо ? ' bad' : ''); clearTimeout(тост.т); тост.т = setTimeout(() => e.className = 'toast', 2600); }
+async function rpc(fn, args) {
+  try {
+    const r = await fetch(SB + '/rest/v1/rpc/' + fn, { method: 'POST',
+      headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Content-Profile': 'b009', 'Accept-Profile': 'b009' },
+      body: JSON.stringify(args || {}) });
+    const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch (e) {}
+    if (!r.ok) return { ok: false, error: (j && j.message) || ('База ' + r.status) };
+    if (j && j.code === 'token') { выйти('Вход устарел — войди заново'); }
+    return j;
+  } catch (e) { return { ok: false, error: 'Нет связи' }; }
+}
+const можно = п => !!Я && (Я.prava || []).some(x => x === 'admin' || x === п);
+
+// ---------- ВХОД ----------
+$('verL').textContent = ВЕРСИЯ; $('ver').textContent = ВЕРСИЯ;
+$('btnLogin').onclick = async () => {
+  $('lgErr').textContent = ''; $('btnLogin').disabled = true;
+  const r = await rpc('login', { p_login: $('lg').value.trim(), p_pass: $('pw').value, p_ver: ВЕРСИЯ });
+  $('btnLogin').disabled = false;
+  if (!r || !r.ok) { $('lgErr').textContent = (r && r.error) || 'Ошибка'; return; }
+  ТОК = r.token; Я = { name: r.name, prava: r.prava, kassy: r.kassy };
+  пш('b9_tok', ТОК); пш('b9_me', JSON.stringify(Я)); $('pw').value = '';
+  открыть();
+};
+$('pw').onkeydown = e => { if (e.key === 'Enter') $('btnLogin').click(); };
+function выйти(почему) { ТОК = ''; Я = null; пш('b9_tok', null); пш('b9_me', null); $('scrApp').classList.add('hide'); $('scrLogin').classList.remove('hide'); if (почему) $('lgErr').textContent = почему; }
+$('btnOut').onclick = () => выйти();
+function открыть() {
+  $('scrLogin').classList.add('hide'); $('scrApp').classList.remove('hide');
+  $('who').textContent = Я.name;
+  $('tabs').querySelector('[data-t=V]').classList.toggle('hide', !можно('vnosit'));
+  $('tabs').querySelector('[data-t=A]').classList.toggle('hide', !можно('admin'));
+  const полный = можно('admin') || !Я.kassy;
+  ['L', 'P'].forEach(t => $('tabs').querySelector('[data-t=' + t + ']').classList.toggle('hide', !полный));
+  вкладка(чт('b9_tab', 'K'));
+}
+
+// ---------- ВКЛАДКИ ----------
+const ВКЛ = { K: 'Кассы', V: 'Ввод', L: 'Люди', P: 'Прибыль', A: 'Консоль' };
+$('tabs').querySelectorAll('button').forEach(b => b.onclick = () => вкладка(b.dataset.t));
+function вкладка(t) {
+  if ($('tabs').querySelector('[data-t=' + t + ']').classList.contains('hide')) t = 'K';
+  пш('b9_tab', t);
+  Object.keys(ВКЛ).forEach(k => $('t' + k).classList.toggle('hide', k !== t));
+  $('tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  $('title').textContent = ВКЛ[t];
+  ({ K: кассы, V: ввод, L: люди, P: прибыль, A: консоль })[t]();
+}
+$('btnRef').onclick = () => вкладка(чт('b9_tab', 'K'));
+
+// ---------- КАССЫ ----------
+let ПЕР = +чт('b9_per', '0');
+$('lPer').querySelectorAll('button').forEach(b => { b.classList.toggle('on', +b.dataset.p === ПЕР); b.onclick = () => { ПЕР = +b.dataset.p; пш('b9_per', ПЕР); $('lPer').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); лента(); }; });
+async function кассы() {
+  const r = await rpc('svod', { p_token: ТОК });
+  if (!r || !r.ok) { if (r && r.code !== 'token') тост(r.error, true); return; }
+  СВОД = r;
+  $('kKassy').innerHTML = r.kassy.map(k => `<div class="tile"><div class="k">${esc(k.name)}${k.kto ? ' · ' + esc(k.kto) : ''}</div>
+    <div class="v ${k.summa < 0 ? 'r' : ''}">${фз(k.summa).replace(/^\+/, '')} ${ВАЛ[k.val]}</div>
+    ${k.val === 'RUB' ? `<div class="mu">ср. курс ${k.kurs ? ф(k.kurs, 2) : '—'} · ≈ ${ф(k.usd)} $</div>` : ''}</div>`).join('');
+  if (r.ogranicheno) { $('kSvod').classList.add('hide'); } else {
+    $('kSvod').classList.remove('hide');
+    const кр = r.lyudi.filter(x => x.usd > 0).reduce((a, x) => a + x.usd, 0), дл = r.lyudi.filter(x => x.usd < 0).reduce((a, x) => a + x.usd, 0);
+    const п = r.pribyl;
+    $('kSvod').innerHTML = `<div class="row"><span>Кредиторы (мы должны)</span><span class="n p">${ф(кр)} $</span></div>
+      <div class="row"><span>Должники (нам должны)</span><span class="n ${дл ? 'r' : ''}">${ф(-дл)} $</span></div>
+      <div class="row"><span>Прибыль месяца</span><span class="n p">${ф(п.itogo)} $</span></div>
+      <div class="row"><span>Фарқ (сверка)</span><span class="n ${Math.abs(r.farq) >= 1 ? 'r' : 'p'}">${Math.abs(r.farq) >= 1 ? ф(r.farq, 2) + ' ⚠' : '0 ✓'}</span></div>`;
+  }
+  лента();
+}
+async function лента() {
+  const до = мскДень(Date.now()), от = мскДень(Date.now() - ПЕР * 864e5);
+  const r = await rpc('lenta', { p_token: ТОК, p_ot: ПЕР === 1 ? от : от, p_do: ПЕР === 1 ? от : до });
+  if (!r || !r.ok) return;
+  const з = r.zapisi;
+  if (!з.length) { $('kLenta').innerHTML = '<div class="note" style="text-align:center;padding:20px 0">Записей нет</div>'; return; }
+  let день = '';
+  $('kLenta').innerHTML = з.map(x => {
+    const д = мскДень(x.at); let h = '';
+    if (д !== день) { день = д; h += `<div class="mu" style="margin:14px 0 4px;font-weight:700">${д === мскДень(Date.now()) ? 'Сегодня' : деньРус(д)}</div>`; }
+    const пр = x.stroki.find(s => s.vid === 'pribyl');
+    const стр = x.stroki.filter(s => s.vid !== 'pribyl').map(s => `${esc(s.schet)} <span class="n ${s.summa < 0 ? 'r' : 'p'}">${фз(s.summa, 2)} ${ВАЛ[s.val]}</span>${s.kurs ? ' / ' + ф(s.kurs, 2) : ''}`).join('<br>');
+    return h + `<div class="it ${x.status === 'отменена' ? 'off' : ''}"><div class="top"><span>${x.tip === 'start' ? 'Старт' : esc(x.stroki.filter(s => s.vid === 'chelovek').map(s => s.schet).join(', ') || x.note || '№' + x.id)}</span>
+      <span>${пр ? `<span class="pill pok">+${ф(пр.summa, 2)} $</span>` : ''}${x.status === 'отменена' ? ' <span class="pill pb">отменена</span>' : ''}</span></div>
+      <div class="sm">${стр}</div>
+      <div class="meta">${мскВремя(x.at)} · ${esc(x.kto)}${x.note && x.stroki.some(s => s.vid === 'chelovek') ? ' · ' + esc(x.note) : ''}${x.status !== 'отменена' && можно('pravit') && x.tip !== 'start' ? ` · <span class="lnk" onclick="отменить(${x.id}, this)">отменить</span>` : ''}</div></div>`;
+  }).join('');
+}
+async function отменить(id, эл) {
+  if (эл.dataset.раз !== '1') { эл.dataset.раз = '1'; эл.textContent = 'ещё раз — отменить'; эл.style.color = 'var(--bad)'; setTimeout(() => { эл.dataset.раз = ''; эл.textContent = 'отменить'; эл.style.color = ''; }, 3000); return; }
+  const r = await rpc('otmena', { p_token: ТОК, p_id: id });
+  if (r && r.ok) { тост('Отменено'); кассы(); } else тост(r && r.error, true);
+}
+
+// ---------- ВВОД ----------
+let ТИП = 'kl', КАССА = 'Касса Москва', ЗНАК = 1, ТП_КАССА = 'Касса Ташкент', ИЗ = 'Касса Москва', В = 'Касса Турция', РЕК = null;
+const кассыСп = () => СЧЕТА.filter(s => s.vid === 'kassa');
+const счёт = имя => СЧЕТА.find(s => s.name.toLowerCase() === String(имя || '').toLowerCase());
+function сег(id, список, текущий, клик) {
+  $(id).innerHTML = список.map(s => `<button data-n="${esc(s.name)}" class="${s.name === текущий ? 'on' : ''}">${esc(s.name.replace('Касса ', ''))}</button>`).join('');
+  $(id).querySelectorAll('button').forEach(b => b.onclick = () => { клик(b.dataset.n); $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); пересчёт(); });
+}
+async function ввод() {
+  if (!СЧЕТА.length) { const r = await rpc('scheta_spisok', { p_token: ТОК }); if (r && r.ok) СЧЕТА = r.scheta; }
+  if (!СВОД) { const r = await rpc('svod', { p_token: ТОК }); if (r && r.ok) СВОД = r; }
+  сег('vKassa', кассыСп().filter(s => s.name !== 'Тезер'), КАССА, n => КАССА = n);
+  сег('tpKassa', кассыСп().filter(s => s.val !== 'RUB' && s.name !== 'Тезер'), ТП_КАССА, n => ТП_КАССА = n);
+  сег('prIz', кассыСп(), ИЗ, n => ИЗ = n); сег('prV', кассыСп(), В, n => В = n);
+  if (!$('vDen').value) { $('vDen').value = мскДень(Date.now()); $('vVr').value = мскВремя(Date.now()); }
+  $('vDen').max = мскДень(Date.now());
+  пересчёт();
+}
+$('vTip').querySelectorAll('button').forEach(b => b.onclick = () => { ТИП = b.dataset.v; $('vTip').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  ['Kl', 'Tk', 'Tp', 'Pr'].forEach(k => $('v' + k).classList.toggle('hide', k.toLowerCase() !== ТИП)); РЕК = null; пересчёт(); });
+$('vZn').querySelectorAll('button').forEach(b => b.onclick = () => { ЗНАК = +b.dataset.z; $('vZn').querySelectorAll('button').forEach(x => { x.classList.toggle('on', x === b); x.classList.toggle('g', x === b && ЗНАК > 0); x.classList.toggle('rr', x === b && ЗНАК < 0); }); пересчёт(); });
+// поля сумм: пробелы по тысячам
+document.querySelectorAll('input[inputmode=decimal]').forEach(i => i.addEventListener('input', () => {
+  if (/kurs|Kurs|Pr$/.test(i.id)) { пересчёт(); return; }
+  const raw = i.value.replace(/\s/g, ''); const m = raw.match(/^(-?)(\d*)([.,]\d*)?$/);
+  if (m) i.value = m[1] + (m[2] ? Number(m[2]).toLocaleString('ru-RU').replace(/ /g, ' ') : '') + (m[3] || '');
+  if (i.id === 'vChel' || i.id === 'tkUsdt' || i.id === 'tpUsdt' || i.id === 'prPol') i.dataset.руками = i.value ? '1' : '';
+  пересчёт();
+}));
+['vDen', 'vVr', 'vNote'].forEach(id => $(id).addEventListener('input', () => РЕК = null));
+// подсказки имён
+$('vIm').oninput = () => {
+  const q = $('vIm').value.trim().toLowerCase(), сп = $('vImL');
+  // сначала те, что начинаются с набранного: «Хам» → Хамит, а не Мухаммад
+  const н = СЧЕТА.filter(s => s.vid === 'chelovek' && (!q || s.name.toLowerCase().includes(q)))
+    .sort((a, b) => (b.name.toLowerCase().startsWith(q) - a.name.toLowerCase().startsWith(q)) || a.name.localeCompare(b.name)).slice(0, 8);
+  сп.innerHTML = н.map(s => `<div data-n="${esc(s.name)}">${esc(s.name)}</div>`).join('');
+  сп.style.display = q && н.length ? 'block' : 'none';
+  сп.querySelectorAll('div').forEach(d => d.onmousedown = e => { e.preventDefault(); $('vIm').value = d.dataset.n; сп.style.display = 'none'; пересчёт(); });
+  пересчёт();
+};
+$('vIm').onblur = () => setTimeout(() => $('vImL').style.display = 'none', 200);
+
+function строки() {
+  // → { stroki, pribyl, ошибка, итог[] }
+  const к = счёт(КАССА), с = число($('vSum').value), курс = число($('vKurs').value);
+  if (ТИП === 'kl') {
+    const имя = $('vIm').value.trim();
+    const руб = к && к.val === 'RUB';
+    $('vKursW').classList.toggle('hide', !руб); $('vSumL').textContent = 'Сумма, ' + (к ? ВАЛ[к.val] : '');
+    if (!имя) return { ошибка: 'Впиши человека' };
+    if (!с) return { ошибка: 'Впиши сумму' };
+    if (руб && !курс) return { ошибка: 'Впиши курс' };
+    const usd = руб ? с / курс : с;
+    $('vUsd').textContent = руб ? '= ' + ф(usd, 2) + ' $' : '';
+    if (!$('vChel').dataset.руками) $('vChel').value = '';
+    $('vChel').placeholder = ф(usd, 2);
+    const чел = $('vChel').dataset.руками ? число($('vChel').value) : Math.round(usd * 100) / 100;
+    const ч = Math.round(чел * 100) / 100 * 1;
+    const стр = [{ schet: КАССА, summa: ЗНАК * с, kurs: руб ? курс : null }, { schet: имя, summa: ЗНАК * ч }];
+    return { stroki: стр, pribyl: ЗНАК * usd - ЗНАК * ч, имя, деньги: ЗНАК * ч, note: '' };
+  }
+  if (ТИП === 'tk') {
+    const р = число($('tkRub').value), к2 = число($('tkKurs').value);
+    if (!р || !к2) return { ошибка: 'Впиши рубли и курс' };
+    const u = $('tkUsdt').dataset.руками ? число($('tkUsdt').value) : Math.round(р / к2 * 100) / 100;
+    $('tkUsdt').placeholder = ф(р / к2, 2);
+    return { stroki: [{ schet: 'Касса Москва', summa: -р, kurs: к2 }, { schet: 'Тезер', summa: u }], pribyl: u - р / к2, note: 'Тезер купили' };
+  }
+  if (ТИП === 'tp') {
+    const д = число($('tpUsd').value), п = число($('tpPr').value);
+    if (!д) return { ошибка: 'Впиши, сколько $ пришло' };
+    let u = $('tpUsdt').dataset.руками ? число($('tpUsdt').value) : (п != null ? Math.round(д / (1 + п / 100) * 100) / 100 : null);
+    if (!u) return { ошибка: 'Впиши % или сколько тезера ушло' };
+    $('tpUsdt').placeholder = ф(u, 2);
+    return { stroki: [{ schet: ТП_КАССА, summa: д }, { schet: 'Тезер', summa: -u }], pribyl: д - u, note: 'Тезер продали' + (п != null ? ' · ' + ф(п, 2) + '%' : '') };
+  }
+  // перемещение
+  const ки = счёт(ИЗ), кв = счёт(В), ушло = число($('prSum').value);
+  const нуженКурс = (ки && кв) && (ки.val === 'RUB') !== (кв.val === 'RUB');
+  $('prKursW').classList.toggle('hide', !нуженКурс);
+  $('prSumL').textContent = 'Ушло, ' + (ки ? ВАЛ[ки.val] : ''); $('prPolL').textContent = 'Пришло, ' + (кв ? ВАЛ[кв.val] : '');
+  if (ИЗ === В) return { ошибка: 'Кассы одинаковые' };
+  if (!ушло) return { ошибка: 'Впиши сумму' };
+  const кк = число($('prKurs').value);
+  if (нуженКурс && !кк) return { ошибка: 'Впиши курс' };
+  const полу = $('prPol').dataset.руками ? число($('prPol').value) : (нуженКурс ? (ки.val === 'RUB' ? ушло / кк : ушло * кк) : ушло);
+  const usdИз = ки.val === 'RUB' ? ушло / кк : ушло, usdВ = кв.val === 'RUB' ? полу / кк : полу;
+  return { stroki: [{ schet: ИЗ, summa: -ушло, kurs: ки.val === 'RUB' ? кк : null }, { schet: В, summa: Math.round(полу * 100) / 100, kurs: кв.val === 'RUB' ? кк : null }], pribyl: usdВ - usdИз, note: 'Перемещение' };
+}
+function пересчёт() {
+  const р = строки();
+  const имя = $('vIm').value.trim(), л = СВОД && СВОД.lyudi ? СВОД.lyudi.find(x => x.name.toLowerCase() === имя.toLowerCase()) : null;
+  $('vImB').textContent = ТИП === 'kl' && имя ? (л ? 'сейчас: ' + фз(л.usd, 2) + ' $' : (счёт(имя) ? 'сейчас: 0 $' : 'новый человек')) : '';
+  if (р.ошибка) { $('vItog').innerHTML = `<div class="mu">${esc(р.ошибка)}</div>`; $('btnZap').disabled = true; return; }
+  $('btnZap').disabled = false;
+  let h = `<div class="row"><span>Прибыль записи</span><span class="n ${р.pribyl > 0.004 ? 'p' : р.pribyl < -0.004 ? 'r' : ''}">${фз(р.pribyl, 2)} $</span></div>`;
+  if (ТИП === 'kl') { const после = (л ? л.usd : 0) + р.деньги; h += `<div class="row"><span>${esc(имя)} после</span><span class="n">${Math.abs(после) < 0.005 ? '0 $ · закрыт' : фз(после, 2) + ' $'}</span></div>`; }
+  $('vItog').innerHTML = h;
+}
+$('btnZap').onclick = async () => {
+  const р = строки(); if (р.ошибка) return;
+  $('vErr').textContent = ''; $('btnZap').disabled = true; $('btnZap').textContent = 'ЗАПИСЫВАЮ…';
+  РЕК = РЕК || ('r' + Date.now() + Math.random().toString(36).slice(2, 7));
+  const at = $('vDen').value + 'T' + ($('vVr').value || '12:00') + ':00+03:00';
+  const note = [р.note, $('vNote').value.trim()].filter(Boolean).join(' · ');
+  const r = await rpc('zapis', { p_token: ТОК, p: { req: РЕК, at, note, tip: ТИП, stroki: р.stroki } });
+  $('btnZap').textContent = 'ЗАПИСАТЬ'; $('btnZap').disabled = false;
+  if (!r || !r.ok) { $('vErr').textContent = (r && r.error) || 'Не записано'; return; }
+  РЕК = null; тост('Записано' + (Math.abs(r.pribyl) >= 0.01 ? ' · прибыль ' + фз(r.pribyl, 2) + ' $' : ''));
+  ['vIm', 'vSum', 'vChel', 'tkRub', 'tkUsdt', 'tpUsd', 'tpUsdt', 'prSum', 'prPol', 'vNote'].forEach(id => { $(id).value = ''; $(id).dataset.руками = ''; });
+  $('vDen').value = мскДень(Date.now()); $('vVr').value = мскВремя(Date.now());
+  СЧЕТА = []; СВОД = null; ввод();
+};
+
+// ---------- ЛЮДИ ----------
+async function люди() {
+  const r = await rpc('svod', { p_token: ТОК }); if (!r || !r.ok || !r.lyudi) return;
+  СВОД = r; рисЛюди();
+}
+$('lPoisk').oninput = () => рисЛюди();
+function рисЛюди() {
+  const q = $('lPoisk').value.trim().toLowerCase(), r = СВОД;
+  const вид = x => !q || x.name.toLowerCase().includes(q);
+  const стр = x => `<div class="row" style="cursor:pointer" onclick="история(${x.id}, '${esc(x.name)}')"><span>${esc(x.name)}</span><span class="n ${x.usd > 0 ? 'p' : 'r'}">${фз(x.usd, 2)} $</span></div>`;
+  const кр = r.lyudi.filter(x => x.usd > 0 && вид(x)), дл = r.lyudi.filter(x => x.usd < 0 && вид(x));
+  $('lKred').innerHTML = '<b>Кредиторы</b> <span class="mu">мы должны</span>' + (кр.map(стр).join('') || '<div class="mu">нет</div>') +
+    `<div class="row"><span>Прибыль · всего</span><span class="n p">${ф(r.pribyl.vsego, 2)} $</span></div>`;
+  $('lDolg').innerHTML = '<b>Должники</b> <span class="mu">нам должны</span>' + (дл.map(стр).join('') || '<div class="mu">нет</div>');
+  const з = r.zakryty.filter(n => !q || n.toLowerCase().includes(q));
+  $('lZakr').innerHTML = '<b>Закрыты в 0</b><div class="mu" style="margin-top:6px">' + (з.map(esc).join(' · ') || 'нет') + '</div>';
+}
+async function история(id, имя) {
+  const r = await rpc('lenta', { p_token: ТОК, p_ot: '2000-01-01', p_do: мскДень(Date.now()), p_schet: id });
+  if (!r || !r.ok) return;
+  let ит = 0;
+  const з = r.zapisi.filter(x => x.status !== 'отменена').reverse().map(x => { const s = x.stroki.find(s => s.schet === имя); ит += s ? s.usd : 0; return { x, s, ит }; }).reverse();
+  $('lIst').innerHTML = `<div class="mu" style="margin:14px 0 4px;font-weight:700">${esc(имя)} · история</div>` + з.map(({ x, s, ит }) => {
+    const касса = x.stroki.find(q => q.vid === 'kassa');
+    return `<div class="it"><div class="top"><span>${касса ? esc(касса.schet.replace('Касса ', '')) + ' ' + фз(касса.summa, 2) + ' ' + ВАЛ[касса.val] + (касса.kurs ? ' / ' + ф(касса.kurs, 2) : '') : esc(x.note)}</span><span class="${s.usd > 0 ? 'p' : 'r'}">${фз(s.usd, 2)}</span></div>
+      <div class="meta">${деньРус(мскДень(x.at))} ${мскВремя(x.at)} · остаток ${фз(ит, 2)} $${x.note ? ' · ' + esc(x.note) : ''}</div></div>`;
+  }).join('');
+  $('lIst').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ---------- ПРИБЫЛЬ ----------
+['pOt', 'pDo'].forEach(id => $(id).onchange = () => прибыль());
+async function прибыль() {
+  if (!$('pOt').value) { const д = мскДень(Date.now()); $('pOt').value = д.slice(0, 8) + '01'; $('pDo').value = д; }
+  const r = await rpc('svod', { p_token: ТОК, p_ot: $('pOt').value, p_do: $('pDo').value }); if (!r || !r.ok || !r.pribyl) return;
+  const п = r.pribyl, мск = r.kassy.find(k => k.val === 'RUB'), курс = (мск && мск.kurs) || 0;
+  $('pTiles').innerHTML = `<div class="tile"><div class="k">В $ — из сделок</div><div class="v p">${ф(п.sdelki, 2)} $</div></div>
+    <div class="tile"><div class="k">Из курса рублей</div><div class="v p">${ф(п.kurs, 2)} $</div>${курс ? `<div class="mu">≈ ${ф(п.kurs * курс)} ₽</div>` : ''}</div>`;
+  $('pItog').innerHTML = `<div class="row"><span>Итого за период</span><span class="n p big">${ф(п.itogo, 2)} $</span></div>
+    <div class="row"><span>Всего с начала</span><span class="n">${ф(п.vsego, 2)} $</span></div>`;
+  $('pDni').innerHTML = '<b>По дням</b>' + (п.po_dnyam.map(d => `<div class="row"><span>${деньРус(d.den)}</span><span class="n p">${ф(d.sdelki + d.kurs, 2)} $ <span class="mu">(сделки ${ф(d.sdelki, 2)} · курс ${ф(d.kurs, 2)})</span></span></div>`).join('') || '<div class="mu">пусто</div>');
+}
+
+// ---------- КОНСОЛЬ ----------
+const ПРАВА = [['smotrit', 'смотрит'], ['vnosit', 'вносит'], ['pravit', 'отменяет'], ['admin', 'админ']];
+let ЛЮДИ = [], КАССЫ_А = [], ФОРМА = null;
+async function консоль() {
+  const r = await rpc('adm_lyudi', { p_token: ТОК }); if (!r || !r.ok) { тост(r && r.error, true); return; }
+  ЛЮДИ = r.lyudi; КАССЫ_А = r.kassy;
+  $('aLyudi').innerHTML = ЛЮДИ.map((u, i) => `<div class="row"><span style="cursor:pointer" onclick="формаОткрыть(${i})"><b>${esc(u.name)}</b> <span class="mu">${esc(u.login)}</span><br>
+    <span class="mu">${u.prava.map(p => (ПРАВА.find(x => x[0] === p) || [p, p])[1]).join(' · ')}${u.kassy ? ' · кассы: ' + u.kassy.map(id => esc((КАССЫ_А.find(k => k.id === id) || {}).name || id)).join(', ') : ''}</span></span>
+    <span><span class="pill ${u.active ? 'pok' : 'pb'}" style="cursor:pointer" onclick="вклВыкл(${i}, this)">${u.active ? 'включён' : 'выключен'}</span></span></div>`).join('');
+  const ж = await rpc('adm_zhurnal', { p_token: ТОК, p_limit: 50 });
+  $('aLog').innerHTML = ж && ж.ok ? ж.log.map(x => `<div class="row"><span class="mu">${деньРус(мскДень(x.at))} ${мскВремя(x.at)}</span><span style="text-align:right">${esc(x.kto)} · ${esc(x.chto)}${x.kogo ? ' · ' + esc(x.kogo) : ''}${x.bylo || x.stalo ? `<br><span class="mu">${esc(x.bylo || '—')} → ${esc(x.stalo || '—')}</span>` : ''}</span></div>`).join('') : '';
+}
+async function вклВыкл(i, эл) {
+  const u = ЛЮДИ[i];
+  if (эл.dataset.раз !== '1') { эл.dataset.раз = '1'; эл.textContent = u.active ? 'ещё раз — выключить' : 'ещё раз — включить'; setTimeout(() => { эл.dataset.раз = ''; эл.textContent = u.active ? 'включён' : 'выключен'; }, 3000); return; }
+  const r = await rpc('adm_vkl', { p_token: ТОК, p_login: u.login, p_active: !u.active });
+  if (r && r.ok) консоль(); else тост(r && r.error, true);
+}
+function чипы(id, список, вкл) {
+  $(id).innerHTML = список.map(([k, t]) => `<span data-k="${k}" class="${вкл.includes(String(k)) ? 'on' : ''}">${esc(t)}</span>`).join('');
+  $(id).querySelectorAll('span').forEach(s => s.onclick = () => s.classList.toggle('on'));
+}
+function формаОткрыть(i) {
+  const u = i == null ? null : ЛЮДИ[i]; ФОРМА = u;
+  $('aForm').classList.remove('hide'); $('aErr').textContent = '';
+  $('aFT').textContent = u ? 'Править: ' + u.name : 'Новый человек';
+  $('aLg').value = u ? u.login : ''; $('aLg').disabled = !!u; $('aIm').value = u ? u.name : ''; $('aPw').value = '';
+  $('aPwL').textContent = u ? 'Новый пароль (пусто — не менять)' : 'Пароль';
+  чипы('aPr', ПРАВА, u ? u.prava : ['smotrit']);
+  чипы('aKs', КАССЫ_А.map(k => [k.id, k.name]), u && u.kassy ? u.kassy.map(String) : []);
+  $('aForm').scrollIntoView({ behavior: 'smooth' });
+}
+$('aNew').onclick = () => формаОткрыть(null);
+$('aCancel').onclick = () => $('aForm').classList.add('hide');
+$('aSave').onclick = async () => {
+  const пр = [...$('aPr').querySelectorAll('.on')].map(s => s.dataset.k);
+  const кс = [...$('aKs').querySelectorAll('.on')].map(s => +s.dataset.k);
+  const r = await rpc('adm_chelovek', { p_token: ТОК, p_login: $('aLg').value.trim(), p_name: $('aIm').value.trim(), p_prava: пр, p_kassy: кс.length ? кс : null, p_pass: $('aPw').value || null });
+  if (!r || !r.ok) { $('aErr').textContent = (r && r.error) || 'Ошибка'; return; }
+  тост('Сохранено'); $('aForm').classList.add('hide'); консоль();
+};
+
+if (ТОК && Я) открыть();
+</script>
+</body></html>
