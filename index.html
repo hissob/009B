@@ -68,6 +68,17 @@ input:focus{outline:none;border-color:var(--acc)}
 .sheet{background:var(--bg);border:1px solid var(--l);border-bottom:0;border-radius:22px 22px 0 0;padding:16px;width:100%;max-width:520px;max-height:92vh;overflow:auto}
 .str{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;padding:6px 0;border-bottom:1px solid var(--l)}
 .str .h{grid-column:1/3;font-size:12px;color:var(--m);font-weight:700}
+.dt{display:grid;grid-template-columns:1fr 118px;gap:12px}.dt input{padding:10px 10px;font-size:14px}
+.rp{background:var(--c);border:1px solid var(--l);border-radius:16px;padding:10px 12px;margin:10px 0;cursor:pointer}
+.rp .g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}.rp .g div{background:var(--c2);border-radius:10px;padding:7px 7px;overflow:hidden}
+.rp .k{font-size:10px;color:var(--m);font-weight:800;letter-spacing:.04em;white-space:nowrap}.rp .v{font-weight:800;font-variant-numeric:tabular-nums;font-size:13.5px;white-space:nowrap}
+.cur{font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px;margin-left:5px;vertical-align:2px;background:rgba(74,158,255,.15);color:var(--b)}
+.cur.rub{background:rgba(255,107,107,.15);color:var(--bad)}.cur.zm{background:rgba(54,208,125,.15);color:var(--ok)}
+.bl{background:var(--c);border:1px solid var(--l);border-radius:16px;padding:4px 14px;margin:10px 0}
+.bl .hh{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0 6px;border-bottom:1px solid var(--l)}
+.bl .it2{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--l);cursor:pointer}
+.bl .it2:last-child{border:0}.bl .ft{display:flex;justify-content:space-between;padding:9px 0 10px;font-weight:800;border-top:2px solid var(--l)}
+.hero{background:linear-gradient(135deg,rgba(167,139,250,.16),var(--c));border:1px solid rgba(167,139,250,.4);border-radius:18px;padding:14px 16px;margin:10px 0}
 .adm{font-size:12px;color:var(--m);margin-top:8px}.adm input{width:auto;display:inline;padding:0;margin-right:6px}
 </style></head>
 <body><div class="app">
@@ -96,12 +107,14 @@ input:focus{outline:none;border-color:var(--acc)}
   <div id="tOtdel">
     <div class="seg sm hide" id="regSeg" style="margin:0 0 8px"><button data-r="tezer" class="on">💠 ТЕЗЕР</button><button data-r="stambul">🇹🇷 СТАМБУЛ</button></div>
     <div class="kgrid" id="oKassy"></div>
+    <div class="rp hide" id="rPl"></div>
 
     <!-- обычная форма: кто → приход/расход/перевод → сумма -->
     <div id="fObych">
       <div id="fKtoW"><label>Кто · клиент из базы или новый</label>
         <div class="ac"><input id="fKto" class="big" autocomplete="off" placeholder="1–2 буквы…"><div class="ac-list" id="fKtoL"></div></div>
-        <span class="chip hide" id="fKtoB"></span></div>
+        <span class="chip hide" id="fKtoB"></span>
+        <div class="seg sm hide" id="fVal"><button data-v="USD" class="on">В $ по курсу</button><button data-v="RUB">В ₽ · займ, без курса</button></div></div>
       <div class="seg" id="fTip"><button data-z="1" class="on g">＋ ПРИХОД</button><button data-z="-1">− РАСХОД</button><button data-z="0">⇄ ПЕРЕВОД</button></div>
       <div class="two" id="fSumW"><div><label id="fSumL">Сумма</label><input id="fSum" class="big" inputmode="decimal" placeholder="0"></div>
         <div id="fKursW"><label>Курс ₽ за $</label><input id="fKurs" class="big" inputmode="decimal" placeholder="88,5"></div></div>
@@ -129,7 +142,7 @@ input:focus{outline:none;border-color:var(--acc)}
       <div class="usd" id="tItog"></div>
     </div>
 
-    <div class="two eq"><div><label>Дата</label><input id="fDen" type="date"></div><div><label>Время</label><input id="fVr" type="time"></div></div>
+    <div class="dt"><div><label>Дата</label><input id="fDen" type="date"></div><div><label>Время</label><input id="fVr" type="time"></div></div>
     <label>Изох</label><input id="fNote" placeholder="необязательно">
     <button class="btn" id="btnZap">ЗАПИСАТЬ</button>
     <div class="err" id="fErr"></div>
@@ -141,7 +154,7 @@ input:focus{outline:none;border-color:var(--acc)}
 
   <!-- ОТЧЁТ -->
   <div id="tOtchet" class="hide">
-    <div class="seg sm" id="oSeg" style="margin-top:0"><button data-o="sost" class="on">Состояние</button><button data-o="lyudi">Люди</button><button data-o="pribyl">Прибыль</button></div>
+    <div class="seg sm" id="oSeg" style="margin-top:0"><button data-o="sost" class="on">Баланс</button><button data-o="lyudi">Люди</button><button data-o="pribyl">Прибыль</button></div>
     <div id="oSost"></div>
     <div id="oLyudi" class="hide"><input id="oPoisk" placeholder="Поиск по имени" style="margin-top:10px"><div id="oLyudiS"></div><div id="oIst"></div></div>
     <div id="oPribyl" class="hide">
@@ -177,7 +190,7 @@ input:focus{outline:none;border-color:var(--acc)}
 
 <script>
 'use strict';
-const ВЕРСИЯ = 'Б 1.2';
+const ВЕРСИЯ = 'Б 1.3';
 const SB = 'https://lyxxbonoycdsulralmfg.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHhib25veWNkc3VscmFsbWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNzcyNTAsImV4cCI6MjEwMzc1MzI1MH0.bHKwEj7z94RKlPGGFGn6vB6W3Nlu99-psz9wvFefRis';
 const $ = id => document.getElementById(id);
@@ -249,6 +262,8 @@ const кассы = () => СЧЕТА.filter(s => s.vid === 'kassa');
 const кассаСвод = n => (СВОД && СВОД.kassy || []).find(k => k.name === n) || { summa: 0, usd: 0 };
 const счёт = имя => СЧЕТА.find(s => s.name.toLowerCase() === String(имя || '').trim().toLowerCase());
 const вал = имя => (счёт(имя) || {}).val || 'USD';
+const основа = n => String(n || '').replace(/\s*₽$/, '').trim();
+const рубСчёт = имя => счёт(основа(имя) + ' ₽');
 async function открыть() {
   $('scrLogin').classList.add('hide'); $('scrApp').classList.remove('hide');
   $('who').textContent = Я.name;
@@ -289,7 +304,19 @@ function плитки() {
     return `<button type="button" class="kb ${k.name === КАССА ? 'on' : ''}" data-n="${esc(k.name)}"><div class="k">${esc(кИмя(k.name))}${k.kto && !кИмя(k.name).includes(k.kto) ? ' · ' + esc(k.kto) : ''}</div>
       <div class="v ${с.summa < 0 ? 'r' : ''}">${фз(с.summa).replace(/^\+/, '')} ${ВАЛ[k.val]}</div>${k.val === 'RUB' && с.kurs ? `<div class="mu">ср. курс ${ф(с.kurs, 2)}</div>` : ''}</button>`; }).join('');
   $('oKassy').querySelectorAll('.kb').forEach(b => b.onclick = () => { КАССА = b.dataset.n; пш('b9_kassa_' + ОТДЕЛ, КАССА); плитки(); пересчёт(); });
+  рубПлашка();
 }
+// Рубли Москвы: нам должны · мы должны · наших; тап — список
+let РУБ_СП = false;
+function рубПлашка() {
+  const р = СВОД && СВОД.rubli, вид = ОТДЕЛ === 'moskva' && р;
+  $('rPl').classList.toggle('hide', !вид); if (!вид) return;
+  $('rPl').innerHTML = `<div style="display:flex;justify-content:space-between"><b style="font-size:13px">Рубли Москвы</b><span class="mu">${РУБ_СП ? 'скрыть ▴' : 'кто · ▾'}</span></div>
+    <div class="g"><div><div class="k">НАМ ДОЛЖНЫ</div><div class="v r">${ф(р.nam)} ₽</div></div><div><div class="k">МЫ ДОЛЖНЫ</div><div class="v p">${ф(р.my)} ₽</div></div><div><div class="k">НАШИХ</div><div class="v">${ф(р.nashih)} ₽</div></div></div>
+    ${РУБ_СП ? (р.lyudi.length ? р.lyudi.map(x => `<div class="row"><span>${esc(x.name)} <span class="cur ${x.vid === 'zaim' ? 'zm' : 'rub'}">${x.vid === 'zaim' ? '₽ счёт' : 'по сделке · ' + ф(x.kurs, 2)}</span></span><span class="n ${x.rub > 0 ? 'p' : 'r'}">${фз(x.rub)} ₽</span></div>`).join('') : '<div class="mu" style="padding:8px 0">рублёвых долгов нет</div>')
+      : `<div class="mu" style="margin-top:6px">в кассе ${ф(р.kassa)} ₽ − мы должны + нам должны = наших</div>`}`;
+}
+$('rPl').onclick = () => { РУБ_СП = !РУБ_СП; рубПлашка(); };
 function отдел() {
   $('regSeg').classList.toggle('hide', ОТДЕЛ !== 'region');
   $('regSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.r === РЕГ));
@@ -308,29 +335,43 @@ function сброситьДату() { $('fDen').value = мскДень(Date.now(
 function подсказки(inp, list, after) {
   inp.addEventListener('input', () => {
     const q = inp.value.trim().toLowerCase();
-    const н = СЧЕТА.filter(s => s.vid === 'chelovek' && (!q || s.name.toLowerCase().includes(q)))
+    const н = СЧЕТА.filter(s => s.vid === 'chelovek' && !/₽$/.test(s.name) && (!q || s.name.toLowerCase().includes(q)))
       .sort((a, b) => (b.name.toLowerCase().startsWith(q) - a.name.toLowerCase().startsWith(q)) || a.name.localeCompare(b.name)).slice(0, 8);
-    list.innerHTML = н.map(s => `<div data-n="${esc(s.name)}"><span>${esc(s.name)}</span><span class="n ${s.usd > 0 ? 'p' : s.usd < 0 ? 'r' : 'mu'}">${s.usd ? фз(s.usd) + ' $' : '0'}</span></div>`).join('');
+    // рублёвые счета без своего $-счёта тоже в подсказках (под основным именем)
+    СЧЕТА.filter(s => s.vid === 'chelovek' && /₽$/.test(s.name) && !счёт(основа(s.name)) && (!q || s.name.toLowerCase().includes(q))).forEach(s => н.push({ name: основа(s.name), usd: 0 }));
+    list.innerHTML = н.map(s => { const р = рубСчёт(s.name), рс = р ? р.summa : 0;
+      return `<div data-n="${esc(s.name)}"><span>${esc(s.name)}</span><span class="n">${s.usd ? `<span class="${s.usd > 0 ? 'p' : 'r'}">${фз(s.usd)} $</span>` : ''}${рс ? ` <span class="${рс > 0 ? 'p' : 'r'}">${фз(рс)} ₽</span>` : ''}${!s.usd && !рс ? '<span class="mu">0</span>' : ''}</span></div>`; }).join('');
     list.style.display = q && н.length ? 'block' : 'none';
     list.querySelectorAll('div[data-n]').forEach(d => d.onmousedown = e => { e.preventDefault(); inp.value = d.dataset.n; list.style.display = 'none'; after(); });
     after();
   });
   inp.addEventListener('blur', () => setTimeout(() => list.style.display = 'none', 200));
 }
-function чипБаланса(el, имя, сдвиг) {
-  const с = счёт(имя);
+function чипБаланса(el, имя) {
   if (!имя) { el.classList.add('hide'); return; }
+  const с = счёт(основа(имя)), р = рубСчёт(имя);
   el.classList.remove('hide');
-  const б = с ? (с.usd || 0) : 0;
-  const т = б > 0.004 ? `мы должны ему ${ф(б, 2)} $` : б < -0.004 ? `он должен нам ${ф(-б, 2)} $` : (с ? 'баланс 0' : 'новый человек');
-  el.className = 'chip ' + (б > 0.004 ? 'p' : б < -0.004 ? 'r' : '');
-  el.textContent = т;
+  const б = с ? (с.usd || 0) : 0, рб = р ? (р.summa || 0) : 0, ч = [];
+  if (б > 0.004) ч.push(`мы должны ему ${ф(б, 2)} $`); else if (б < -0.004) ч.push(`он должен нам ${ф(-б, 2)} $` + (с.kurs_rub ? ` (≈ ${ф(-б * с.kurs_rub)} ₽ по ${ф(с.kurs_rub, 2)})` : ''));
+  if (рб > 0.4) ч.push(`мы должны ему ${ф(рб)} ₽ · займ`); else if (рб < -0.4) ч.push(`он должен нам ${ф(-рб)} ₽`);
+  const знак = б || рб;
+  el.className = 'chip ' + (знак > 0.004 ? 'p' : знак < -0.004 ? 'r' : '');
+  el.textContent = ч.join(' · ') || (с || р ? 'баланс 0' : 'новый человек');
 }
+const послеРуб = (имя, сдвиг) => { const б = ((рубСчёт(имя) || {}).summa || 0) + сдвиг; return Math.abs(б) < 0.5 ? `${основа(имя)} станет 0 ₽ ✓` : `${основа(имя)} станет ${фз(б)} ₽ · ${б > 0 ? 'мы должны' : 'он должен'}`; };
 const послеБаланс = (имя, сдвиг) => { const б = ((счёт(имя) || {}).usd || 0) + сдвиг; return Math.abs(б) < 0.005 ? `${имя} станет 0 ✓` : `${имя} станет ${фз(б, 2)} $ · ${б > 0 ? 'мы должны' : 'он должен'}`; };
 
 // --- обычная форма
-let ТИП = 1, КУДА = null, РЕК = null;
-подсказки($('fKto'), $('fKtoL'), () => { РЕК = null; пересчёт(); });
+let ТИП = 1, КУДА = null, РЕК = null, ВД = 'USD', ВД_РУКАМИ = false;
+подсказки($('fKto'), $('fKtoL'), () => { РЕК = null; автоВалюта(); пересчёт(); });
+$('fVal').querySelectorAll('button').forEach(b => b.onclick = () => { ВД = b.dataset.v; ВД_РУКАМИ = true; пересчёт(); });
+// Под имя: есть открытый ₽-займ — сразу «В ₽»; должен рублями по сделке — подставим его курс
+function автоВалюта() {
+  const имя = $('fKto').value.trim(), р = рубСчёт(имя), с = счёт(основа(имя));
+  if ($('fKurs').dataset.авто === '1') { $('fKurs').value = ''; $('fKurs').dataset.авто = ''; }
+  if (!ВД_РУКАМИ) ВД = р && Math.abs(р.summa || 0) >= 0.5 && !(с && Math.abs(с.usd || 0) >= 0.005) ? 'RUB' : 'USD';
+  if (ВД === 'USD' && с && с.kurs_rub && (с.usd || 0) < 0 && !$('fKurs').value) { $('fKurs').value = String(+с.kurs_rub).replace('.', ','); $('fKurs').dataset.авто = '1'; }
+}
 $('fTip').querySelectorAll('button').forEach(b => b.onclick = () => { тип(+b.dataset.z); сегКуда(); пересчёт(); });
 function тип(z) { ТИП = z; РЕК = null;
   $('fTip').querySelectorAll('button').forEach(x => { const в = +x.dataset.z === z; x.classList.toggle('on', в); x.classList.toggle('g', в && z > 0); x.classList.toggle('rr', в && z < 0); });
@@ -349,13 +390,27 @@ document.querySelectorAll('input[inputmode=decimal]').forEach(i => i.addEventLis
     if (m) i.value = m[1] + (m[2] ? Number(m[2]).toLocaleString('ru-RU').replace(/\u00a0/g, ' ') : '') + (m[3] || '');
   }
   if (['fSum2', 'tSum'].includes(i.id)) i.dataset.руками = i.value ? '1' : '';
+  if (i.id === 'fKurs') i.dataset.авто = '';
   if (i.closest('#mPr')) правкаПересчёт(); else пересчёт();
 }));
 ['fDen', 'fVr', 'fNote'].forEach(id => $(id).addEventListener('input', () => РЕК = null));
 
 function обычная() {
   const к = КАССА, руб = вал(к) === 'RUB', с = число($('fSum').value), курс = число($('fKurs').value);
-  $('fKursW').classList.toggle('hide', !руб); $('fSumW').className = руб ? 'two' : '';
+  $('fVal').classList.toggle('hide', !руб || ТИП === 0);
+  $('fVal').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === ВД));
+  const займ = руб && ТИП !== 0 && ВД === 'RUB';
+  $('fUslW').classList.toggle('hide', !АДМИН || ТИП === 0 || займ);
+  $('fKursW').classList.toggle('hide', !руб || займ); $('fSumW').className = руб && !займ ? 'two' : '';
+  if (займ) {
+    const имя = $('fKto').value.trim();
+    $('fSumL').textContent = (ТИП > 0 ? 'Приход' : 'Расход') + ', ₽ · рубль за рубль';
+    чипБаланса($('fKtoB'), имя);
+    if (!имя) return { ошибка: 'Впиши, кто' };
+    if (!с) return { ошибка: 'Впиши сумму' };
+    return { stroki: [{ schet: к, summa: ТИП * с }, { schet: основа(имя), val: 'RUB', summa: ТИП * с }], pribyl: 0, istochnik: null, tip: 'zaim',
+      итог: послеРуб(имя, ТИП * с) + ' · на прибыль не влияет' };
+  }
   $('fSumL').textContent = (ТИП > 0 ? 'Приход' : ТИП < 0 ? 'Расход' : 'Ушло из ' + кИмя(к)) + ', ' + ВАЛ[вал(к)];
   const usd = с && (!руб || курс) ? (руб ? с / курс : с) : null;
   if (ТИП !== 0) {
@@ -367,7 +422,7 @@ function обычная() {
     const усл = АДМИН ? (число($('fUsl').value) || 0) : 0;
     const чел = Math.round((usd - усл) * 100) / 100;            // приход: зачли меньше; расход: с него больше
     const человеку = ТИП > 0 ? чел : -(Math.round((usd + усл) * 100) / 100);
-    return { stroki: [{ schet: к, summa: ТИП * с, kurs: руб ? курс : null }, { schet: имя, summa: человеку }], pribyl: усл,
+    return { stroki: [{ schet: к, summa: ТИП * с, kurs: руб ? курс : null }, { schet: основа(имя), summa: человеку }], pribyl: усл,
       istochnik: усл ? (к === 'Касса Турция' ? 'stambul' : 'usluga') : null, tip: ТИП > 0 ? 'prihod' : 'rashod',
       итог: (руб ? `= ${ф(usd, 2)} $ · ` : '') + послеБаланс(имя, человеку) + (усл ? ` · прибыль +${ф(усл, 2)} $` : '') };
   }
@@ -439,7 +494,7 @@ function пересчёт() {
 }
 function очистить() {
   ['fKto', 'fSum', 'fKurs', 'fSum2', 'fKurs2', 'fUsl', 'fNote', 'tKto', 'tUsdt', 'tPr', 'tSum', 'tKurs'].forEach(id => { $(id).value = ''; $(id).dataset.руками = ''; });
-  $('fKtoB').classList.add('hide'); $('tKtoB').classList.add('hide'); сброситьДату();
+  $('fKtoB').classList.add('hide'); $('tKtoB').classList.add('hide'); сброситьДату(); ВД = 'USD'; ВД_РУКАМИ = false;
 }
 $('btnZap').onclick = async () => {
   const р = текущая(); if (р.ошибка) return;
@@ -507,11 +562,11 @@ async function правка(id) {
   const стр = r.stroki.filter(s => s.vid !== 'pribyl');
   let h = `<b style="font-size:16px">${esc(заголовок(r))}</b> <span class="mu">· №${r.id} · записал ${esc(r.kto)}</span>`;
   if (!r.pravo.ok) h += `<div class="card">🔒 ${esc(r.pravo.error)}</div>`;
-  h += стр.map((s, i) => `<div class="str"><div class="h">${s.vid === 'kassa' ? esc(кИмя(s.schet)) + ' · ' + (s.summa > 0 ? 'приход' : 'расход') : 'человек · в $'}</div>
+  h += стр.map((s, i) => `<div class="str"><div class="h">${s.vid === 'kassa' ? esc(кИмя(s.schet)) + ' · ' + (s.summa > 0 ? 'приход' : 'расход') : s.val === 'RUB' ? 'человек · ₽ счёт' : 'человек · в $'}</div>
       ${s.vid === 'chelovek' ? `<div><input id="e_n${i}" value="${esc(s.schet)}" ${r.pravo.ok ? '' : 'disabled'}></div>` : ''}
       <div${s.vid === 'chelovek' ? '' : ' style="grid-column:1/' + (s.kurs ? '2' : '3') + '"'}><input id="e_s${i}" inputmode="decimal" value="${ф(Math.abs(s.summa), 2)}" ${r.pravo.ok ? '' : 'disabled'}></div>
       ${s.kurs ? `<div><input id="e_k${i}" inputmode="decimal" value="${String(+s.kurs).replace('.', ',')}" ${r.pravo.ok ? '' : 'disabled'}></div>` : ''}</div>`).join('');
-  h += `<div class="two eq"><div><label>Дата</label><input id="e_d" type="date" value="${мскДень(r.at)}" ${r.pravo.ok ? '' : 'disabled'}></div><div><label>Время</label><input id="e_t" type="time" value="${мскВремя(r.at)}" ${r.pravo.ok ? '' : 'disabled'}></div></div>
+  h += `<div class="dt"><div><label>Дата</label><input id="e_d" type="date" value="${мскДень(r.at)}" ${r.pravo.ok ? '' : 'disabled'}></div><div><label>Время</label><input id="e_t" type="time" value="${мскВремя(r.at)}" ${r.pravo.ok ? '' : 'disabled'}></div></div>
     <label>Изох</label><input id="e_no" value="${esc(r.note || '')}" ${r.pravo.ok ? '' : 'disabled'}>
     <div class="card" id="e_it"></div>`;
   if (r.pravo.ok) h += `<button class="btn" id="e_save" onclick="правкаСохранить()">Сохранить</button>
@@ -575,36 +630,79 @@ async function отчёт() {
   const кр = r.lyudi.filter(x => x.usd > 0), дл = r.lyudi.filter(x => x.usd < 0);
   const скр = кр.reduce((a, x) => a + x.usd, 0), сдл = дл.reduce((a, x) => a + x.usd, 0), всего = r.kassy.reduce((a, k) => a + k.usd, 0);
   if (ОСЕГ === 'sost') {
-    $('oSost').innerHTML = `<div class="card"><b>Где деньги</b>${r.kassy.map(k => `<div class="row"><span>${esc(кИмя(k.name))}${k.kto && !кИмя(k.name).includes(k.kto) ? ' <span class="mu">· ' + esc(k.kto) + '</span>' : ''}</span><span class="n ${k.summa < 0 ? 'r' : ''}">${фз(k.summa, 0).replace(/^\+/, '')} ${ВАЛ[k.val]}${k.val === 'RUB' ? ` <span class="mu">≈ ${ф(k.usd)} $</span>` : ''}</span></div>`).join('')}
-      <div class="row"><b>Всего в кассах</b><b class="n">≈ ${ф(всего)} $</b></div></div>
-      <div class="kgrid"><div class="kb"><div class="k">Кредиторы · мы должны</div><div class="v p">${ф(скр)} $</div><div class="mu">${кр.length} чел.</div></div>
-      <div class="kb"><div class="k">Должники · нам должны</div><div class="v r">${ф(-сдл)} $</div><div class="mu">${дл.length} чел.</div></div></div>
-      <div class="card"><div class="row"><span>Прибыль месяца</span><span class="n p">${ф(r.pribyl.sdelki + r.pribyl.kurs, 2)} $</span></div>
-      <div class="row"><span>Прибыль всего</span><span class="n">${ф(r.pribyl.vsego, 2)} $</span></div>
-      <div class="row"><span>Фарқ (сверка)</span><span class="n ${Math.abs(r.farq) >= 1 ? 'r' : 'p'}">${Math.abs(r.farq) >= 1 ? ф(r.farq, 2) + ' ⚠' : '0 ✓'}</span></div></div>
-      <div class="note">Кассы = кредиторы − должники + прибыль. Не ноль — где-то запись неверна.</div>`;
+    // Кто нам должен: кассы с деньгами + люди с минусом. Кому мы должны: люди с плюсом, займы, прибыль.
+    const пр = r.pribyl.vsego, рк = r.rubli ? r.rubli.kurs : 0;
+    const касса = k => ({ ид: null, имя: '🏦 ' + кИмя(k.name), под: (k.kto && !кИмя(k.name).includes(k.kto) ? k.kto + ' · ' : '') + (k.val !== 'USD' ? фз(k.summa).replace(/^\+/, '') + ' ' + ВАЛ[k.val] : 'касса'), usd: k.usd, руб: k.val === 'RUB' ? k.summa : 0 });
+    const чел = x => ({ ид: x.osnova, имя: x.osnova, метка: x.val === 'RUB' ? '<span class="cur zm">₽ счёт</span>' : x.rub ? '<span class="cur rub">₽</span>' : '<span class="cur">$</span>',
+      под: x.val === 'RUB' ? фз(x.summa) + ' ₽ · по ср. курсу ' + ф(рк, 2) : x.rub ? фз(x.rub) + ' ₽ · по курсу сделки ' + ф(x.kurs_rub, 2) : x.n + ' сдел. · ' + деньРус(мскДень(x.last)),
+      usd: x.usd, руб: x.val === 'RUB' ? x.summa : (x.rub || 0) });
+    const нам = [...r.kassy.filter(k => k.usd > 0.004).map(касса), ...r.lyudi.filter(x => x.usd < -0.004).sort((a, b) => a.usd - b.usd).map(чел)];
+    const мы = [...r.lyudi.filter(x => x.usd > 0.004).map(чел), ...r.kassy.filter(k => k.usd < -0.004).map(касса)];
+    if (пр > 0.004) мы.push({ имя: '📈 Прибыль', под: 'сделки, Тезер, услуги, курс рублей', usd: пр, руб: 0 }); else if (пр < -0.004) нам.push({ имя: '📉 Убыток', под: 'прибыль в минусе', usd: пр, руб: 0 });
+    const сумма = a => a.reduce((t, x) => t + Math.abs(x.usd), 0);
+    const рубИтог = (a, z) => { const к = a.filter(x => x.ид && x.руб * z > 0); return к.length ? `<div class="mu" style="padding:0 0 10px">из них в рублях: <b style="color:var(--t)">${ф(Math.abs(к.reduce((t, x) => t + x.руб, 0)))} ₽</b> (≈ ${ф(Math.abs(к.reduce((t, x) => t + x.usd, 0)))} $) · ${к.length} чел.</div>` : ''; };
+    const стр = (x, кл) => `<div class="it2" ${x.ид ? `onclick="история('${esc(x.ид).replace(/'/g, "\\'")}')"` : ''}><div style="min-width:0"><b>${esc(x.имя)}</b>${x.метка || ''}<div class="mu">${esc(x.под)}</div></div><b class="n ${кл}">${ф(Math.abs(x.usd), 2)} $</b></div>`;
+    const ок = Math.abs(r.farq) < 1;
+    $('oSost').innerHTML = `<div class="hero"><div class="mu">В обороте</div><div style="font-size:30px;font-weight:800">${ф(r.balans.dolzhniki)} $</div>
+        <div class="mu">кто нам должен = кому мы должны · <b class="${ок ? 'p' : 'r'}">фарқ ${ок ? '0 ✓' : ф(r.farq, 2) + ' ⚠'}</b></div></div>
+      <div class="bl"><div class="hh"><b>Кто нам должен</b><span class="mu">деньги у них</span></div>${нам.map(x => стр(x, 'r')).join('') || '<div class="mu" style="padding:10px 0">никто</div>'}
+        <div class="ft"><span>Итого</span><span class="n r">${ф(сумма(нам), 2)} $</span></div>${рубИтог(нам, -1)}</div>
+      <div class="bl"><div class="hh"><b>Кому мы должны</b><span class="mu">их деньги у нас</span></div>${мы.map(x => стр(x, 'p')).join('') || '<div class="mu" style="padding:10px 0">никому</div>'}
+        <div class="ft"><span>Итого</span><span class="n p">${ф(сумма(мы), 2)} $</span></div>${рубИтог(мы, 1)}</div>
+      <div class="note">Рубли в $: касса Москвы и займы — по среднему курсу наших рублей ${ф(рк, 2)}; долг по сделке — по курсу этой сделки (в $ он записан при сделке). Касса с деньгами — в «нам должны», прибыль — в «мы должны». Итоги всегда равны; не равны — где-то запись неверна.</div>`;
   } else рисЛюди();
 }
 $('oPoisk').oninput = () => рисЛюди();
 function рисЛюди() {
-  const r = СВОД, q = $('oPoisk').value.trim().toLowerCase(), вид = x => !q || x.name.toLowerCase().includes(q);
-  const стр = x => `<div class="row" style="cursor:pointer" onclick="история(${x.id}, '${esc(x.name).replace(/'/g, "\\'")}')"><span>${esc(x.name)}</span><span class="n ${x.usd > 0 ? 'p' : 'r'}">${фз(x.usd, 2)} $</span></div>`;
-  const кр = r.lyudi.filter(x => x.usd > 0 && вид(x)), дл = r.lyudi.filter(x => x.usd < 0 && вид(x)).sort((a, b) => a.usd - b.usd);
-  $('oLyudiS').innerHTML = `<div class="card"><b>Кредиторы</b> <span class="mu">мы должны · тап — история</span>${кр.map(стр).join('') || '<div class="mu">нет</div>'}</div>
-    <div class="card"><b>Должники</b> <span class="mu">нам должны</span>${дл.map(стр).join('') || '<div class="mu">нет</div>'}</div>
-    <div class="card"><b>Закрыты в 0</b><div class="mu" style="margin-top:6px">${r.zakryty.filter(n => !q || n.toLowerCase().includes(q)).map(esc).join(' · ') || 'нет'}</div></div>`;
+  $('oLyudiS').classList.remove('hide'); $('oPoisk').classList.remove('hide'); $('oIst').innerHTML = '';
+  const r = СВОД, q = $('oPoisk').value.trim().toLowerCase();
+  const по = {}; r.lyudi.forEach(x => { const o = по[x.osnova] = по[x.osnova] || { имя: x.osnova, usd: 0, руб: 0, рубСч: 0, n: 0, last: x.last }; o.usd += x.usd; o.n += x.n; if (x.val === 'RUB') o.рубСч += x.summa; else if (x.rub) o.руб += x.rub; if (x.last > o.last) o.last = x.last; });
+  const все = Object.values(по).filter(x => !q || x.имя.toLowerCase().includes(q));
+  const откр = все.filter(x => Math.abs(x.usd) >= 0.005 || Math.abs(x.рубСч) >= 0.5).sort((a, b) => a.usd - b.usd), нули = все.filter(x => !откр.includes(x)).sort((a, b) => b.last.localeCompare(a.last));
+  const стр = x => `<div class="it2" onclick="история('${esc(x.имя).replace(/'/g, "\\'")}')"><div><b>${esc(x.имя)}</b>${x.рубСч ? '<span class="cur zm">₽ счёт</span>' : x.руб ? '<span class="cur rub">₽</span>' : ''}<div class="mu">${x.n} сдел. · последняя ${деньРус(мскДень(x.last))}</div></div>
+    <div style="text-align:right"><b class="n ${x.usd > 0.004 ? 'p' : x.usd < -0.004 ? 'r' : 'mu'}">${Math.abs(x.usd) < 0.005 ? '0 ✓' : фз(x.usd, 2) + ' $'}</b>${x.рубСч ? `<div class="mu">${фз(x.рубСч)} ₽ счёт</div>` : x.руб ? `<div class="mu">${фз(x.руб)} ₽</div>` : ''}</div></div>`;
+  $('oLyudiS').innerHTML = `<div class="bl"><div class="hh"><b>Открытые</b><span class="mu">${откр.length} · тап — отчёт</span></div>${откр.map(стр).join('') || '<div class="mu" style="padding:10px 0">нет</div>'}</div>
+    <div class="bl"><div class="hh"><b>Рассчитаны</b><span class="mu">${нули.length} · все сделки внутри</span></div>${нули.map(стр).join('') || '<div class="mu" style="padding:10px 0">нет</div>'}</div>`;
 }
-async function история(id, имя) {
-  const r = await rpc('lenta', { p_token: ТОК, p_ot: '2000-01-01', p_do: мскДень(Date.now()), p_schet: id });
+// Отчёт клиента: все его сделки ($ и ₽ счета), остаток после каждой, итог, копировать
+let ИСТ_ПЕР = 'vse', ИСТ_ИМЯ = '';
+async function история(имя) {
+  ИСТ_ИМЯ = имя;
+  if (ОСЕГ !== 'lyudi') { ОСЕГ = 'lyudi'; пш('b9_oseg', ОСЕГ); await отчёт(); }
+  const до = мскДень(Date.now()), от = ИСТ_ПЕР === 'mes' ? до.slice(0, 8) + '01' : '2000-01-01';
+  const r = await rpc('lenta', { p_token: ТОК, p_ot: '2000-01-01', p_do: до, p_imya: имя });
   if (!r || !r.ok) return;
-  let ит = 0;
-  const з = r.zapisi.slice().reverse().map(x => { const s = x.stroki.find(s => s.schet === имя); ит += s ? s.usd : 0; return { x, s, ит }; }).reverse();
-  $('oIst').innerHTML = `<div class="day"><span>${esc(имя)} · история</span><span>${фз(ит, 2)} $</span></div>` + з.map(({ x, s, ит }) => {
-    const к = x.stroki.find(q => q.vid === 'kassa');
-    return `<div class="it"><div class="top"><span>${к ? esc(кИмя(к.schet)) + ' ' + фз(к.summa, 2) + ' ' + ВАЛ[к.val] + (к.kurs ? ' / ' + ф(к.kurs, 2) : '') : esc(x.note || '')}</span><span class="n ${s.usd > 0 ? 'p' : 'r'}">${фз(s.usd, 2)} $</span></div>
-      <div class="meta">${деньРус(мскДень(x.at))} ${мскВремя(x.at)} · остаток ${фз(ит, 2)} $${x.note ? ' · ' + esc(x.note) : ''} <span class="pr" onclick="правка(${x.id})">✎</span></div></div>`;
-  }).join('');
-  $('oIst').scrollIntoView({ behavior: 'smooth' });
+  const св = (СВОД.lyudi || []).filter(x => x.osnova === имя);
+  let д = 0, р = 0, нач = 0, начР = 0; const строки = [];
+  r.zapisi.slice().reverse().forEach(x => {
+    const мои = x.stroki.filter(s => s.vid === 'chelovek' && основа(s.schet) === имя);
+    const dd = мои.filter(s => s.val !== 'RUB').reduce((t, s) => t + s.usd, 0), dr = мои.filter(s => s.val === 'RUB').reduce((t, s) => t + +s.summa, 0);
+    д += dd; р += dr;
+    if (мскДень(x.at) < от) { нач = д; начР = р; return; }
+    строки.push({ x, dd, dr, д, р });
+  });
+  const к = x => x.stroki.find(q => q.vid === 'kassa');
+  const sum = (v, val) => фз(v, val === 'RUB' ? 0 : 2) + ' ' + ВАЛ[val];
+  $('oLyudiS').classList.add('hide'); $('oPoisk').classList.add('hide');
+  $('oIst').innerHTML = `<div class="mu" style="cursor:pointer;padding:6px 0" onclick="рисЛюди()">‹ Все люди</div><div class="hero"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:20px">${esc(имя)}</b>
+      <span style="text-align:right"><b class="n ${д > 0.004 ? 'p' : д < -0.004 ? 'r' : ''}" style="font-size:20px">${Math.abs(д) < 0.005 && Math.abs(р) < 0.5 ? '0 ✓' : (Math.abs(д) >= 0.005 ? фз(д, 2) + ' $' : '')}</b>${Math.abs(р) >= 0.5 ? `<div class="n ${р > 0 ? 'p' : 'r'}">${фз(р)} ₽ счёт</div>` : ''}</span></div>
+      <div class="mu">${д > 0.004 || р > 0.4 ? 'мы должны ему' : д < -0.004 || р < -0.4 ? 'он должен нам' : 'рассчитан'}${св.find(x => x.rub) ? ' · ≈ ' + фз(св.find(x => x.rub).rub) + ' ₽ по курсу сделки ' + ф(св.find(x => x.rub).kurs_rub, 2) : ''}</div>
+      <div class="seg sm" style="margin-top:8px"><button class="${ИСТ_ПЕР === 'mes' ? 'on' : ''}" onclick="ИСТ_ПЕР='mes';история(ИСТ_ИМЯ)">Месяц</button><button class="${ИСТ_ПЕР === 'vse' ? 'on' : ''}" onclick="ИСТ_ПЕР='vse';история(ИСТ_ИМЯ)">Всё</button></div></div>
+    <div class="bl">${ИСТ_ПЕР === 'mes' ? `<div class="it2" style="cursor:default"><span class="mu">На начало ${деньРус(от)}</span><b class="n">${фз(нач, 2)} $${Math.abs(начР) >= 0.5 ? ' · ' + фз(начР) + ' ₽' : ''}</b></div>` : ''}
+      ${строки.slice().reverse().map(({ x, dd, dr, д, р }) => { const кк = к(x);
+        return `<div class="it2" onclick="правка(${x.id})"><div style="min-width:0"><b>${кк ? esc(кИмя(кк.schet)) + ' ' + sum(кк.summa, кк.val) : esc(x.note || '№' + x.id)}</b>${кк && кк.kurs && кк.val === 'RUB' && dd ? ` <span class="mu">по ${ф(кк.kurs, 2)}</span>` : ''}
+          <div class="mu">${деньРус(мскДень(x.at))} ${мскВремя(x.at)}${x.note ? ' · ' + esc(x.note) : ''} · ✎</div></div>
+          <div style="text-align:right">${dd ? `<b class="n ${dd > 0 ? 'p' : 'r'}">${фз(dd, 2)} $</b>` : ''}${dr ? `<b class="n ${dr > 0 ? 'p' : 'r'}">${фз(dr)} ₽</b>` : ''}<div class="mu">остаток ${фз(д, 2)} $${Math.abs(р) >= 0.5 ? ' · ' + фз(р) + ' ₽' : ''}</div></div></div>`; }).join('') || '<div class="mu" style="padding:10px 0">за период пусто</div>'}
+      <div class="ft"><span>На конец ${деньРус(до)}</span><span class="n">${фз(д, 2)} $${Math.abs(р) >= 0.5 ? ' · ' + фз(р) + ' ₽' : ''}</span></div></div>
+    <button class="btn" onclick="копировать()">📋 Копировать отчёт</button>`;
+  ИСТ_ТЕКСТ = `📊 ${имя}\n` + строки.map(({ x, dd, dr, д, р }) => { const кк = к(x); return `${деньРус(мскДень(x.at))} ${кк ? кИмя(кк.schet) + ' ' + sum(кк.summa, кк.val) + (кк.kurs && кк.val === 'RUB' && dd ? ' / ' + ф(кк.kurs, 2) : '') : (x.note || '')} → ${dd ? фз(dd, 2) + ' $' : ''}${dr ? фз(dr) + ' ₽' : ''}`; }).join('\n')
+    + `\n─────────\nОстаток: ${фз(д, 2)} $${Math.abs(р) >= 0.5 ? ' · ' + фз(р) + ' ₽' : ''}`;
+  window.scrollTo(0, 0);
+}
+let ИСТ_ТЕКСТ = '';
+function копировать() {
+  const запас = () => { try { const t = document.createElement('textarea'); t.value = ИСТ_ТЕКСТ; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); тост('Скопировано'); } catch (e) { тост('Не скопировалось', true); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ИСТ_ТЕКСТ).then(() => тост('Скопировано'), запас); else запас();
 }
 ['pOt', 'pDo'].forEach(id => $(id).onchange = () => прибыль());
 async function прибыль() {
