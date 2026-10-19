@@ -52,6 +52,7 @@ input:focus{outline:none;border-color:var(--acc)}
 .seg.sm button{padding:8px 4px;font-size:12px}
 .chip{display:inline-block;margin-top:6px;font-size:12px;padding:3px 10px;border-radius:10px;font-weight:700;background:var(--c2);color:var(--m)}
 .chip.p{background:rgba(54,208,125,.13);color:var(--ok)}.chip.r{background:rgba(255,107,107,.13);color:var(--bad)}
+.pred{margin-top:6px;font-size:13px;font-weight:700;color:var(--bad);line-height:1.35}
 .usd{margin-top:8px;font-size:16px;font-weight:800;color:var(--b);font-variant-numeric:tabular-nums;min-height:20px}
 .ac{position:relative}.ac-list{position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--c2);border:1px solid var(--l);border-radius:12px;margin-top:4px;max-height:240px;overflow:auto;display:none}
 .ac-list div{padding:10px 12px;border-bottom:1px solid var(--l);display:flex;justify-content:space-between}.ac-list div:last-child{border:0}
@@ -81,6 +82,10 @@ input:focus{outline:none;border-color:var(--acc)}
 .dt input{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;min-height:44px;padding:10px;font-size:14px;text-align:left}
 .dt input::-webkit-date-and-time-value{text-align:left;margin:0}
 .rp{background:var(--c);border:1px solid var(--l);border-radius:16px;padding:10px 12px;margin:10px 0;cursor:pointer}
+.rpg{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px;margin-top:8px}
+.rpi{border-radius:12px;padding:8px 10px;border:1px solid var(--l)}.rpi .k{font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--m)}.rpi .v{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rpi .s{font-size:12px;font-weight:800}.rpi.ok .s{color:var(--ok)}.rpi.bad .s{color:var(--bad)}
+.rpi.ok{background:rgba(54,208,125,.08);border-color:rgba(54,208,125,.4)}.rpi.ok .v{color:var(--ok)}.rpi.bad{background:rgba(255,107,107,.08);border-color:rgba(255,107,107,.45)}.rpi.bad .v{color:var(--bad)}
 .rp .g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}.rp .g div{background:var(--c2);border-radius:10px;padding:7px 7px;overflow:hidden}
 .rp .k{font-size:10px;color:var(--m);font-weight:800;letter-spacing:.04em;white-space:nowrap}.rp .v{font-weight:800;font-variant-numeric:tabular-nums;font-size:13.5px;white-space:nowrap}
 .cur{font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px;margin-left:5px;vertical-align:2px;background:rgba(74,158,255,.15);color:var(--b)}
@@ -214,7 +219,7 @@ input:focus{outline:none;border-color:var(--acc)}
 
 <script>
 'use strict';
-const ВЕРСИЯ = '1.6';
+const ВЕРСИЯ = '1.6.1';
 const SB = 'https://lyxxbonoycdsulralmfg.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHhib25veWNkc3VscmFsbWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNzcyNTAsImV4cCI6MjEwMzc1MzI1MH0.bHKwEj7z94RKlPGGFGn6vB6W3Nlu99-psz9wvFefRis';
 const $ = id => document.getElementById(id);
@@ -367,7 +372,7 @@ function плитки() {
   $('oKassy').className = 'kgrid' + (сп.length === 1 ? ' one' : сп.length === 3 ? ' three' : '');
   $('oKassy').innerHTML = сп.map(k => { const с = кассаСвод(k.name);
     return `<button type="button" class="kb ${k.name === КАССА ? 'on' : ''}" data-n="${esc(k.name)}"><div class="k">${esc(кИмя(k.name))}${k.kto && !кИмя(k.name).includes(k.kto) && сп.length < 3 ? ' · ' + esc(k.kto) : ''}</div>
-      <div class="v ${с.summa < 0 ? 'r' : ''}">${фз(с.summa).replace(/^\+/, '')} ${ВАЛ[k.val]}</div>${k.val === 'RUB' && с.kurs ? `<div class="mu">ср. курс ${ф(с.kurs, 2)}</div>` : ''}</button>`; }).join('');
+      <div class="v ${с.summa < 0 ? 'r' : ''}">${фз(с.summa).replace(/^\+/, '')} ${ВАЛ[k.val]}</div></button>`; }).join('');
   $('oKassy').querySelectorAll('.kb').forEach(b => b.onclick = () => { КАССА = b.dataset.n; пш('b9_kassa_' + ОТДЕЛ, КАССА); плитки(); формаДоступ(); пересчёт(); });
   рубПлашка();
 }
@@ -376,10 +381,23 @@ let РУБ_СП = false;
 function рубПлашка() {
   const р = СВОД && СВОД.rubli, вид = ОТДЕЛ === 'moskva' && р;
   $('rPl').classList.toggle('hide', !вид); if (!вид) return;
+  // в кассе (наличные + карта) · обещано по заявкам · придёт от должников
+  const есть = р.kassa, обещ = р.my, придёт = р.nam, сейчас = есть - обещ, потом = сейчас + придёт;
+  const кл = р.lyudi || [], мыЛ = кл.filter(x => x.rub > 0), намЛ = кл.filter(x => x.rub < 0);
+  const курсОб = мыЛ.length ? мыЛ.reduce((a, x) => a + x.rub, 0) / мыЛ.reduce((a, x) => a + (x.usd || 0), 0) : 0;
+  // курс наших рублей: стоимость рублей, что останутся после всех рублёвых долгов (по партиям)
+  const рубКассы = (СВОД.kassy || []).filter(k => k.val === 'RUB'), книга = рубКассы.reduce((a, k) => a + k.usd, 0) - кл.reduce((a, x) => a + (x.usd || 0), 0);
+  const курсНаш = Math.abs(р.nashih) >= 1 && Math.abs(книга) >= 0.01 ? р.nashih / книга : 0;
+  const строка = (подп, сумма, кл2, доп) => `<div class="row" style="padding:6px 0"><span>${подп}</span><span class="n ${кл2 || ''}">${сумма}${доп ? ` <span class="mu" style="font-weight:600">${доп}</span>` : ''}</span></div>`;
+  const итог = (подп, v, курс) => v >= 0
+    ? `<div class="rpi ok"><div class="k">${подп}</div><div class="s">свободно</div><div class="v">${ф(v)} ₽</div>${курс ? `<div class="mu">ср. курс наших ${ф(курс, 2)}</div>` : ''}</div>`
+    : `<div class="rpi bad"><div class="k">${подп}</div><div class="s">не хватает</div><div class="v">${ф(-v)} ₽</div><div class="mu">купить, чтобы закрыть заявки</div></div>`;
   $('rPl').innerHTML = `<div style="display:flex;justify-content:space-between"><b style="font-size:13px">Рубли Москвы</b><span class="mu">${РУБ_СП ? 'скрыть ▴' : 'кто · ▾'}</span></div>
-    <div class="g"><div><div class="k">НАМ ДОЛЖНЫ</div><div class="v r">${ф(р.nam)} ₽</div></div><div><div class="k">МЫ ДОЛЖНЫ</div><div class="v p">${ф(р.my)} ₽</div></div><div><div class="k">НАШИХ</div><div class="v">${ф(р.nashih)} ₽</div></div></div>
-    ${РУБ_СП ? (р.lyudi.length ? р.lyudi.map(x => `<div class="row"><span>${esc(x.name)} <span class="cur ${x.rub > 0 ? 'zm' : 'rub'}">${x.rub > 0 ? 'мы должны ₽' : 'должен ₽'}</span></span><span class="n ${x.rub > 0 ? 'p' : 'r'}">${фз(x.rub)} ₽</span></div>`).join('') : '<div class="mu" style="padding:8px 0">рублёвых долгов нет</div>')
-      : `<div class="mu" style="margin-top:6px">в кассе ${ф(р.kassa)} ₽ − мы должны + нам должны = наших</div>`}`;
+    ${строка('В кассе и на карте', ф(есть) + ' ₽')}
+    ${строка(`Обещано по заявкам <span class="mu">· ${мыЛ.length} чел.</span>`, (обещ ? '−' : '') + ф(обещ) + ' ₽', 'r', обещ && курсОб ? 'по ' + ф(курсОб, 2) : '')}
+    ${строка(`Придёт от должников <span class="mu">· ${намЛ.length} чел.</span>`, (придёт ? '+' : '') + ф(придёт) + ' ₽', 'p')}
+    <div class="rpg">${итог('СЕЙЧАС', сейчас, придёт ? 0 : курсНаш)}${придёт ? итог('КОГДА ПРИНЕСУТ', потом, курсНаш) : ''}</div>
+    ${РУБ_СП ? (кл.length ? кл.map(x => `<div class="row"><span>${esc(x.name)} <span class="cur ${x.rub > 0 ? 'zm' : 'rub'}">${x.rub > 0 ? 'обещано ₽' : 'должен ₽'}</span></span><span class="n ${x.rub > 0 ? 'r' : 'p'}">${x.rub > 0 ? '−' : '+'}${ф(Math.abs(x.rub))} ₽ <span class="mu" style="font-weight:600">по ${ф(x.kurs, 2)}</span></span></div>`).join('') : '<div class="mu" style="padding:8px 0">рублёвых долгов нет</div>') : ''}`;
 }
 $('rPl').onclick = () => { РУБ_СП = !РУБ_СП; рубПлашка(); };
 function отдел() {
@@ -418,8 +436,15 @@ function чипБаланса(el, имя) {
   if (б > 0.004) ч.push(`мы должны ему ${ф(б, 2)} $`); else if (б < -0.004) ч.push(`он должен нам ${ф(-б, 2)} $`);
   if (рб > 0.4) ч.push(`мы должны ему ${ф(рб)} ₽`); else if (рб < -0.4) ч.push(`он должен нам ${ф(-рб)} ₽`);
   const знак = б || рб;
+  if (Math.abs(б) >= 0.005 && Math.abs(рб) >= 0.5 && (б > 0) !== (рб > 0)) ч.push('⚠ две строки — проверь');
   el.className = 'chip ' + (знак > 0.004 ? 'p' : знак < -0.004 ? 'r' : '');
   el.textContent = ч.join(' · ') || (с || р ? 'баланс 0' : 'новый человек');
+}
+// у клиента долг и в $, и в ₽ с разными знаками — почти всегда ошибка выбора «$ / ₽»
+function двеСтроки(имя, сдвигUsd, сдвигRub) {
+  const u = ((счёт(основа(имя)) || {}).usd || 0) + сдвигUsd, р = ((рубСчёт(имя) || {}).summa || 0) + сдвигRub;
+  if (Math.abs(u) < 0.005 || Math.abs(р) < 0.5 || (u > 0) === (р > 0)) return '';
+  return `${основа(имя)}: будет две строки ${фз(u, 2)} $ и ${фз(р)} ₽ — одна гасит другую. Обычно долг ведут в одной валюте — проверь выбор «$ / ₽».`;
 }
 const послеРуб = (имя, сдвиг) => { const б = ((рубСчёт(имя) || {}).summa || 0) + сдвиг; return Math.abs(б) < 0.5 ? `${основа(имя)} станет 0 ₽ ✓` : `${основа(имя)} станет ${фз(б)} ₽ · ${б > 0 ? 'мы должны' : 'он должен'}`; };
 const послеБаланс = (имя, сдвиг) => { const б = ((счёт(имя) || {}).usd || 0) + сдвиг; return Math.abs(б) < 0.005 ? `${имя} станет 0 ✓` : `${имя} станет ${фз(б, 2)} $ · ${б > 0 ? 'мы должны' : 'он должен'}`; };
@@ -455,6 +480,7 @@ function дефВД() {
   const естьР = р && Math.abs(р.summa || 0) >= 0.5, естьД = с && Math.abs(с.usd || 0) >= 0.005;
   if (естьР && !естьД) return 'RUB';
   if (естьД && !естьР) return 'USD';
+  if (вал(КАССА) === 'RUB' && (ТИП === 1 || ТИП === -1)) return ТИП > 0 ? 'RUB' : 'USD';   // Москва: приход рублей — на ₽-счёт, расход — в $ по курсу
   return ОТДЕЛ === 'tashkent' && ТИП < 0 && вал(КАССА) !== 'RUB' ? 'RUB' : 'USD';
 }
 function автоВалюта() {
@@ -506,7 +532,7 @@ function обычная() {
     if (!имя) return { ошибка: 'Впиши, кто' };
     if (!с) return { ошибка: 'Впиши сумму' };
     return { stroki: [{ schet: к, summa: ТИП * с }, { schet: основа(имя), val: 'RUB', summa: ТИП * с }], pribyl: 0, istochnik: null, tip: 'zaim',
-      итог: послеРуб(имя, ТИП * с) + ' · на прибыль не влияет' };
+      итог: послеРуб(имя, ТИП * с) + ' · на прибыль не влияет', пред: двеСтроки(имя, 0, ТИП * с) };
   }
   $('fSumL').textContent = (ТИП > 0 ? 'Приход' : ТИП < 0 ? 'Расход' : 'Ушло из ' + кИмя(к)) + ', ' + ВАЛ[вал(к)];
   const usd = с && (!руб || курс) ? (руб ? с / курс : с) : null;
@@ -525,11 +551,11 @@ function обычная() {
       const рубли = Math.round(человеку * курс * 100) / 100;
       return { stroki: [{ schet: к, summa: ТИП * с }, { schet: основа(имя), val: 'RUB', summa: рубли, kurs: курс }], pribyl: усл,
         istochnik: усл ? (к === 'Касса Турция' ? 'stambul' : 'usluga') : null, tip: ТИП > 0 ? 'prihod' : 'rashod',
-        итог: `= ${фз(рубли)} ₽ по ${ф(курс, 2)} · ` + послеРуб(имя, рубли) + (усл ? ` · прибыль +${ф(усл, 2)} $` : '') };
+        итог: `= ${фз(рубли)} ₽ по ${ф(курс, 2)} · ` + послеРуб(имя, рубли) + (усл ? ` · прибыль +${ф(усл, 2)} $` : ''), пред: двеСтроки(имя, 0, рубли) };
     }
     return { stroki: [{ schet: к, summa: ТИП * с, kurs: руб ? курс : null }, { schet: основа(имя), summa: человеку }], pribyl: усл,
       istochnik: усл ? (к === 'Касса Турция' ? 'stambul' : 'usluga') : null, tip: ТИП > 0 ? 'prihod' : 'rashod',
-      итог: (руб ? `= ${ф(usd, 2)} $ · ` : '') + послеБаланс(имя, человеку) + (усл ? ` · прибыль +${ф(усл, 2)} $` : '') };
+      итог: (руб ? `= ${ф(usd, 2)} $ · ` : '') + послеБаланс(имя, человеку) + (усл ? ` · прибыль +${ф(усл, 2)} $` : ''), пред: двеСтроки(имя, человеку, 0) };
   }
   // перевод между кассами
   const к2 = КУДА, руб2 = вал(к2) === 'RUB', курс2 = число($('fKurs2').value);
@@ -628,7 +654,7 @@ function пересчёт() {
   const р = текущая(), эл = ОТДЕЛ === 'tezer' ? $('tItog') : $('fItog');
   if (р.ошибка) { эл.innerHTML = `<span class="mu" style="font-size:13px;font-weight:600">${esc(р.ошибка)}</span>`; $('btnZap').disabled = true; return; }
   $('btnZap').disabled = false;
-  эл.innerHTML = esc(р.итог);
+  эл.innerHTML = esc(р.итог) + (р.пред ? `<div class="pred">⚠ ${esc(р.пред)}</div>` : '');
 }
 function очистить() {
   ['fKto', 'fKto2', 'fSum', 'fKurs', 'fSum2', 'fKurs2', 'fUsl', 'fNote', 'fTel', 'tKto', 'tUsdt', 'tPr', 'tSum', 'tKurs'].forEach(id => { $(id).value = ''; $(id).dataset.руками = ''; });
@@ -774,7 +800,8 @@ async function отчёт() {
     // Кто нам должен: кассы с деньгами + люди с минусом. Кому мы должны: люди с плюсом, займы, прибыль.
     const пр = r.pribyl.vsego, рк = r.rubli ? r.rubli.kurs : 0;
     const касса = k => ({ ид: null, имя: '🏦 ' + кИмя(k.name), под: (k.kto && !кИмя(k.name).includes(k.kto) ? k.kto + ' · ' : '') + (k.val !== 'USD' ? фз(k.summa).replace(/^\+/, '') + ' ' + ВАЛ[k.val] : 'касса'), usd: k.usd, руб: k.val === 'RUB' ? k.summa : 0 });
-    const чел = x => ({ ид: x.osnova, имя: x.osnova, метка: x.val === 'RUB' ? `<span class="cur ${x.summa > 0 ? 'zm' : 'rub'}">₽</span>` : '<span class="cur">$</span>',
+    const двое = new Set(r.lyudi.filter(x => r.lyudi.some(y => y.osnova === x.osnova && y.val !== x.val && (y.usd > 0) !== (x.usd > 0) && Math.abs(y.usd) > 0.004 && Math.abs(x.usd) > 0.004)).map(x => x.osnova));
+    const чел = x => ({ ид: x.osnova, имя: x.osnova + (двое.has(x.osnova) ? ' ⚠' : ''), метка: x.val === 'RUB' ? `<span class="cur ${x.summa > 0 ? 'zm' : 'rub'}">₽</span>` : '<span class="cur">$</span>',
       под: x.val === 'RUB' ? фз(x.summa) + ' ₽ · в $ по курсу долга ' + ф(x.kurs, 2) : x.n + ' сдел. · ' + деньРус(мскДень(x.last)),
       usd: x.usd, руб: x.val === 'RUB' ? x.summa : 0 });
     const нам = [...r.kassy.filter(k => k.usd > 0.004).map(касса), ...r.lyudi.filter(x => x.usd < -0.004).sort((a, b) => a.usd - b.usd).map(чел)];
@@ -786,6 +813,7 @@ async function отчёт() {
     const ок = Math.abs(r.farq) < 1;
     $('oSost').innerHTML = `<div class="hero"><div class="mu">В обороте</div><div style="font-size:30px;font-weight:800">${ф(r.balans.dolzhniki)} $</div>
         <div class="mu">кто нам должен = кому мы должны · <b class="${ок ? 'p' : 'r'}">фарқ ${ок ? '0 ✓' : ф(r.farq, 2) + ' ⚠'}</b></div></div>
+      ${двое.size ? `<div class="pred" style="margin:0 0 10px">⚠ Долг и в $, и в ₽ с разными знаками: ${esc([...двое].join(', '))}. Скорее всего одна запись сделана не той кнопкой — открой историю клиента.</div>` : ''}
       <div class="bl"><div class="hh"><b>Кто нам должен</b><span class="mu">деньги у них</span></div>${нам.map(x => стр(x, 'r')).join('') || '<div class="mu" style="padding:10px 0">никто</div>'}
         <div class="ft"><span>Итого</span><span class="n r">${ф(сумма(нам), 2)} $</span></div>${рубИтог(нам, -1)}</div>
       <div class="bl"><div class="hh"><b>Кому мы должны</b><span class="mu">их деньги у нас</span></div>${мы.map(x => стр(x, 'p')).join('') || '<div class="mu" style="padding:10px 0">никому</div>'}
@@ -985,6 +1013,8 @@ const ЯЗ = чт('b9_lang', 'ru');
 const УЗ = {
   'МОСКВА': 'МОСКВА', 'ТАШКЕНТ': 'ТОШКЕНТ', 'СТАМБУЛ': 'ИСТАНБУЛ', 'ОТЧЁТ': 'ҲИСОБОТ', 'Выйти': 'Чиқиш', 'Ташкент': 'Тошкент', 'Стамбул': 'Истанбул',
   '＋ ПРИХОД': '＋ ОЛДИМ', '− РАСХОД': '− БЕРДИМ', '⇄ ПЕРЕВОД': '⇄ ЎТКАЗМА', '👥 КЛ→КЛ': '👥 МИЖ→МИЖ',
+  'будет две строки': 'икки қатор бўлади', 'одна гасит другую': 'бири иккинчисини ёпади', 'Обычно долг ведут в одной валюте — проверь выбор «$ / ₽».': 'Одатда қарз битта валютада юритилади — «$ / ₽» танловини текширинг.',
+  'две строки — проверь': 'икки қатор — текширинг', 'Долг и в $, и в ₽ с разными знаками': 'Қарз ҳам $ да, ҳам ₽ да, турли ишорали', 'Скорее всего одна запись сделана не той кнопкой — открой историю клиента.': 'Эҳтимол бир ёзув нотўғри тугма билан қилинган — мижоз тарихини очинг.',
   'В $ по курсу': '$ га курс бўйича', 'На ₽-счёт · рубль за рубль': '₽ ҳисобга · рублга рубль', 'На ₽-счёт': '₽ ҳисобга', 'Долг в $': 'Қарз $ да', 'Долг в ₽ по курсу': 'Қарз ₽ да курс бўйича',
   'Кто · клиент из базы или новый': 'Ким · базадаги ёки янги мижоз', 'Кто отдал': 'Ким берди', 'Кому': 'Кимга', 'Кто': 'Ким', '1–2 буквы…': '1-2 ҳарф…',
   'Приход': 'Олдим', 'Расход': 'Бердим', 'Курс сделки ₽ за $': 'Келишув курси, $ учун ₽', 'Курс ₽ за $': 'Курс, $ учун ₽',
@@ -1014,6 +1044,9 @@ const УЗ = {
   'Открытые': 'Очиқ', 'Рассчитаны': 'Ёпилган', 'тап — отчёт': 'босинг — ҳисобот', 'все сделки внутри': 'ичида барча амаллар', 'Поиск по имени': 'Исм бўйича қидириш',
   '📋 Копировать отчёт': '📋 Ҳисоботни нусхалаш', 'Скопировано': 'Нусха олинди', '‹ Все люди': '‹ Барча мижозлар', 'На начало': 'Бошида', 'На конец': 'Охирида', 'рассчитан': 'ёпилган',
   'остаток': 'қолдиқ', 'сдел.': 'амал', 'последняя': 'охиргиси', 'За период': 'Давр учун', 'Откуда': 'Қаердан', 'По дням': 'Кунлар бўйича', 'Записи с прибылью': 'Фойдали ёзувлар',
+  'В кассе и на карте': 'Касса ва картада', 'Обещано по заявкам': 'Сделкалар бўйича ваъда', 'Придёт от должников': 'Қарздорлардан келади', 'чел.': 'киши',
+  'СЕЙЧАС': 'ҲОЗИР', 'КОГДА ПРИНЕСУТ': 'ОЛИБ КЕЛИШГАНДА', 'свободно': 'бўш', 'не хватает': 'етмайди', 'ср. курс наших': 'бизникилар ўрт. курси',
+  'купить, чтобы закрыть заявки': 'сделкаларни ёпиш учун сотиб олиш керак', 'обещано ₽': 'ваъда ₽',
   'Права обновлены': 'Ҳуқуқлар янгиланди', '↻ Обновлено до': '↻ Янгиланди:', 'вход сохранён': 'кириш сақланди', 'Нет связи': 'Алоқа йўқ'
 };
 if (ЯЗ === 'uz') {
