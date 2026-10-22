@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0e1014">
+<title>Валюта 2.0 · тест</title>
+<!--
+  «Валюта 2.0» · ТЕСТ · схема b9t (Supabase lyxx…). Боевую Валюту (b009) не трогает.
+  Вход — тот же логин и пароль, что в Валюте. Ключ ниже — публичный anon:
+  без входа он не открывает ничего, каждая функция проверяет вход.
+  Два контура: Москва (₽, без курса) и Ташкент ($). Доллары в Ташкенте и
+  Стамбуле — заявки ОЛИНГ/БЕРИНГ в группу, исполняются по 👍.
+-->
+<style>
+:root{--bg:#0e1014;--c:#171a21;--c2:#1f232c;--l:#2a2f3a;--t:#e8eaef;--m:#8a909c;--ok:#36d07d;--bad:#ff6b6b;--acc:#a78bfa;--y:#f5c451;--b:#4a9eff}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--t);font:15px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;-webkit-text-size-adjust:100%}
+.app{max-width:520px;margin:0 auto;padding:12px 16px calc(28px + env(safe-area-inset-bottom))}
+button,input,select{font:inherit;color:var(--t)}button{cursor:pointer}
+h1{font-size:19px;margin:0}.mu{color:var(--m);font-size:12px}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pill{font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.ru{background:rgba(74,158,255,.15);color:var(--b)}.us{background:rgba(54,208,125,.15);color:var(--ok)}.tst{background:rgba(245,196,81,.15);color:var(--y)}
+.tabs{display:flex;gap:4px;margin:12px 0 10px}
+.tabs button{flex:1;min-width:0;padding:10px 0;border-radius:12px;background:var(--c);border:1px solid var(--l);color:var(--m);font-weight:800;font-size:11px}
+.tabs button.on{border-color:var(--acc);color:var(--acc)}
+.seg{display:flex;gap:4px}.seg button{flex:1;min-width:0;padding:10px 3px;border-radius:11px;background:var(--c2);border:1px solid var(--l);color:var(--m);font-size:12.5px;font-weight:700}
+.seg button.on{border-color:var(--acc);color:var(--t);background:rgba(167,139,250,.13)}
+label{display:block;color:var(--m);font-size:12px;margin:10px 0 4px}
+input,select{width:100%;background:var(--c2);border:1px solid var(--l);border-radius:12px;padding:11px 12px;font-size:16px}
+input.big{font-size:18px;font-weight:800}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card{background:var(--c);border:1px solid var(--l);border-radius:16px;padding:10px 14px;margin:10px 0}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 0;border-bottom:1px solid var(--l)}.row:last-child{border:0}
+.n{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}.p{color:var(--ok)}.r{color:var(--bad)}.y{color:var(--y)}
+.big2{font-size:24px;font-weight:800}
+.sec{font-size:11px;font-weight:800;color:var(--m);letter-spacing:.06em;margin:14px 0 0}
+.btn{width:100%;border:0;border-radius:14px;padding:14px;background:var(--acc);color:#111;font-weight:800;margin-top:14px;font-size:16px}
+.btn.sec2{background:var(--c2);color:var(--t);border:1px solid var(--l)}
+.mini{border:1px solid var(--l);background:var(--c2);border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:700;color:var(--b)}
+.mini.r{color:var(--bad)}
+.go{background:rgba(245,196,81,.07);border:1px dashed rgba(245,196,81,.45);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px;min-height:20px}
+.err{color:var(--bad);font-size:13px;margin-top:8px;min-height:18px}
+.z{padding:10px 0;border-bottom:1px solid var(--l)}.z:last-child{border:0}
+.st{font-size:12.5px;margin-top:3px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.hide{display:none!important}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222833;border:1px solid var(--l);padding:10px 16px;border-radius:12px;font-weight:700;z-index:9;max-width:90%}
+.mod{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:8}
+.mod>div{background:var(--c);border:1px solid var(--l);border-radius:18px 18px 0 0;padding:16px;width:100%;max-width:520px}
+.dt{width:auto!important;padding:6px 8px!important;font-size:13px!important}
+.seg button{font-size:12px}
+.hero{background:linear-gradient(140deg,#202638 0%,#171a21 70%);border:1px solid #303750;border-radius:18px;padding:14px 16px;margin:10px 0}
+.hero .lbl{color:var(--m);font-size:12px}.hero .big{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.kp.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kp>div{background:var(--c);border:1px solid var(--l);border-radius:14px;padding:9px 11px;min-width:0}.kp .v{font-size:15px;font-weight:800;margin-top:2px;line-height:1.2;overflow-wrap:anywhere}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}.tbl td,.tbl th{padding:7px 4px;border-bottom:1px solid var(--l);text-align:right;font-variant-numeric:tabular-nums}
+.tbl td:first-child,.tbl th:first-child{text-align:left}.tbl th{color:var(--m);font-weight:700;font-size:11px;letter-spacing:.04em}.tbl tr:last-child td{border:0}
+.tag{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:10px;background:rgba(245,196,81,.12);color:var(--y);margin-left:4px;white-space:nowrap}
+.cl{cursor:pointer}.cl:active{opacity:.7}
+.sec{margin:16px 0 0}
+</style></head><body>
+
+<div class="app">
+  <div class="hd"><h1>Валюта 2.0 <span class="pill tst">ТЕСТ</span></h1><span class="mu" id="kto"></span></div>
+
+  <div id="vhod" class="hide">
+    <div class="card"><div class="mu">Вход — тот же, что в Валюте</div>
+      <label>Логин</label><input id="lLog" autocomplete="username">
+      <label>Пароль</label><input id="lPas" type="password" autocomplete="current-password">
+      <button class="btn" id="lBtn">Войти</button><div class="err" id="lErr"></div></div>
+  </div>
+
+  <div id="main" class="hide">
+    <div class="tabs" id="tabs"><button data-t="sdelka" class="on">ЗАПИСЬ</button><button data-t="msk">МОСКВА</button><button data-t="tsh">ТАШКЕНТ</button><button data-t="otchet">ОТЧЁТ</button><button data-t="lenta">ЛЕНТА</button></div>
+
+    <!-- ЗАПИСЬ -->
+    <div id="t_sdelka">
+      <div class="seg" id="sTip"><button data-v="zay" class="on">Заявка $</button><button data-v="msk">Москва</button><button data-v="tez">Тезер</button><button data-v="start">Старт</button></div>
+
+      <div id="fZay">
+        <label>Кто</label><input id="fImya" list="imena" autocomplete="off" placeholder="имя клиента"><datalist id="imena"></datalist>
+        <div class="seg" id="fNapr" style="margin-top:10px"><button data-v="berish" class="on">📤 Выдать $</button><button data-v="olish">📥 Взять $</button></div>
+        <div class="two"><div><label>Сумма $</label><input id="fSum" class="big" inputmode="decimal" placeholder="61 005"></div>
+          <div><label>Где</label><div class="seg" id="fMesto"><button data-v="Касса Ташкент" class="on">Ташкент</button><button data-v="Касса Стамбул">Стамбул</button></div></div></div>
+        <div class="two"><div><label>Услуга %</label><input id="fPr" inputmode="decimal" placeholder="1,2"></div>
+          <div><label>Услуга $ <span class="mu">(прибыль)</span></label><input id="fUsl" inputmode="decimal" placeholder="0"></div></div>
+        <label id="fOplL">Клиент платит</label>
+        <div class="seg" id="fOpl"><button data-v="usd" class="on">$ в Москве</button><button data-v="rub">₽ по курсу</button><button data-v="usd_rub">$ + услуга ₽</button><button data-v="tsh">$ в др. кассе</button></div>
+        <div class="two" id="fRubW"><div><label>Курс ₽ за $</label><input id="fKurs" inputmode="decimal" placeholder="87,5"></div>
+          <div><label>Рубли</label><input id="fRub" inputmode="decimal" placeholder="считается само"></div></div>
+        <div id="fUrW"><label>Услуга в рублях, ₽</label><input id="fUr" inputmode="decimal" placeholder="63 500"></div>
+        <div id="fSrazuW"><label id="fSrazuL">В Москве сейчас</label><div class="seg" id="fSrazu"><button data-v="dolg" class="on">В долг</button><button data-v="kassa">Внёс в кассу</button><button data-v="karta">На карту</button></div></div>
+        <label>Телефон · кому в Ташкенте / Стамбуле</label><input id="fTel" inputmode="tel" placeholder="+998 90 …">
+      </div>
+
+      <div id="fMsk" class="hide">
+        <div class="seg" id="mNapr"><button data-v="prinyos" class="on">Принёс</button><button data-v="otdali">Отдали</button><button data-v="perevod">Касса ⇄ Карта</button></div>
+        <div id="mKtoW"><label>Кто</label><input id="mImya" list="imena" autocomplete="off" placeholder="имя клиента"></div>
+        <div class="two"><div><label>Сумма</label><input id="mSum" class="big" inputmode="decimal" placeholder="500 000"></div>
+          <div><label>Валюта</label><div class="seg" id="mVal"><button data-v="RUB" class="on">₽</button><button data-v="USD">$</button></div></div></div>
+        <div id="mGdeW"><label id="mGdeL">Куда</label><div class="seg" id="mGde"><button data-v="kassa" class="on">Касса Москва</button><button data-v="karta">Карта</button></div></div>
+      </div>
+
+      <div id="fTez" class="hide">
+        <div class="seg" id="tTip"><button data-v="pokupka" class="on">Купили USDT за ₽</button><button data-v="prodazha">Взяли $ за USDT</button></div>
+        <div class="two"><div><label>USDT</label><input id="tU" class="big" inputmode="decimal" placeholder="40 000"></div>
+          <div id="tKursW"><label>Курс ₽ за USDT</label><input id="tKurs" class="big" inputmode="decimal" placeholder="87,8"></div>
+          <div id="tUsdW" class="hide"><label>Взяли $</label><input id="tUsd" class="big" inputmode="decimal" placeholder="40 160"></div></div>
+        <div id="tSrW"><label>Рубли из</label><div class="seg" id="tSr"><button data-v="kassa" class="on">Касса Москва</button><button data-v="karta">Карта</button><button data-v="dolg">В долг</button></div></div>
+        <div id="tMW" class="hide"><label>Где взяли $</label><div class="seg" id="tM"><button data-v="Касса Ташкент" class="on">Ташкент</button><button data-v="Касса Стамбул">Стамбул</button></div></div>
+      </div>
+
+      <div id="fStart" class="hide">
+        <label>Касса</label><div class="seg" id="stK"><button data-v="Касса Москва" class="on">Москва ₽</button><button data-v="Карта">Карта</button><button data-v="Москва $">Москва $</button><button data-v="Касса Ташкент">Ташкент</button></div>
+        <div class="two"><div><label>Сумма</label><input id="stS" class="big" inputmode="decimal" placeholder="10 000 000"></div>
+          <div id="stKW"><label>Курс ₽ за $</label><input id="stKurs" class="big" inputmode="decimal" placeholder="87"></div></div>
+      </div>
+
+      <label>Комментарий</label><input id="fNote" placeholder="необязательно">
+      <label>Дата и время (МСК) <span class="mu">— пусто = сейчас; прошлое = задним числом</span></label><input id="fAt" type="datetime-local">
+      <div class="go" id="fGo"></div>
+      <button class="btn" id="fBtn">Записать</button><div class="err" id="fErr"></div>
+    </div>
+
+    <div id="t_msk" class="hide"><div class="hd"><span class="pill ru">Москва · ₽ и $ отдельно · без курса</span><input type="date" id="mNa" class="dt"></div><div id="mBox"></div></div>
+    <div id="t_tsh" class="hide"><div class="hd"><span class="pill us">Ташкент · всё в $</span><input type="date" id="tNa" class="dt"></div><div id="tBox"></div></div>
+    <div id="t_otchet" class="hide"><div class="hd"><div class="seg" id="oVid" style="flex:1"><button data-v="kl" class="on">Клиенты</button><button data-v="vis">Висящие</button><button data-v="sv">Сверка</button></div><input type="date" id="oNa" class="dt"></div>
+      <div id="oKlW"><div class="seg" id="oKt" style="margin-top:8px"><button data-v="msk" class="on">🇷🇺 Клиенты Москвы</button><button data-v="tsh">🇺🇿 Клиенты Ташкента</button></div>
+        <div class="seg" id="oF" style="margin-top:6px"><button data-v="all" class="on">Все</button><button data-v="nam">Должны нам</button><button data-v="my">Мы должны</button></div>
+        <input id="oPoisk" placeholder="поиск по имени" style="margin-top:8px"><div id="oKl"></div></div>
+      <div id="oVis" class="hide"></div><div id="oBox" class="hide"></div></div>
+    <div id="t_lenta" class="hide">
+      <div class="seg" id="lPer"><button data-v="1" class="on">Сегодня</button><button data-v="7">7 дней</button><button data-v="31">Месяц</button><button data-v="3650">Всё</button></div>
+      <input id="lImya" list="imena" placeholder="клиент — пусто = все" style="margin-top:8px">
+      <div id="lBox"></div>
+    </div>
+  </div>
+</div>
+<div id="mod" class="mod hide"><div id="modBox"></div></div>
+
+<script>
+const SB = 'https://lyxxbonoycdsulralmfg.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHhib25veWNkc3VscmFsbWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNzcyNTAsImV4cCI6MjEwMzc1MzI1MH0.bHKwEj7z94RKlPGGFGn6vB6W3Nlu99-psz9wvFefRis';
+const FN = SB + '/functions/v1/b9t-bot';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const ф = (n, d) => { n = Number(n) || 0; const dd = d === undefined ? (Math.abs(n % 1) > 0.004 ? 2 : 0) : d;
+  return n.toLocaleString('ru-RU', { minimumFractionDigits: dd, maximumFractionDigits: dd }).replace(/[  ]/g, ' ').replace(/^-/, '−'); };
+const число = s => { const v = parseFloat(String(s || '').replace(/\s/g, '').replace(',', '.')); return isNaN(v) ? null : v; };
+const мск = t => new Date(new Date(t).getTime() + 3 * 3600000).toISOString();
+const дт = t => { const s = мск(t); return s.slice(8, 10) + '.' + s.slice(5, 7) + ' ' + s.slice(11, 16); };
+const сегодня = () => мск(Date.now()).slice(0, 10);
+const atИз = v => v ? v + ':00+03:00' : null;
+const сейчасМск = () => мск(Date.now()).slice(0, 16);
+let ТОК = '', АДМ = false, ВКЛ = 'sdelka';
+try { ТОК = localStorage.getItem('b9t_tok') || ''; } catch (e) {}
+
+function тост(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2400); }
+async function rpc(fn, args, схема) {
+  try {
+    const r = await fetch(SB + '/rest/v1/rpc/' + fn, { method: 'POST',
+      headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Content-Profile': схема || 'b9t', 'Accept-Profile': схема || 'b9t' },
+      body: JSON.stringify(args || {}) });
+    const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch (e) {}
+    if (!r.ok) { const m = (j && j.message) || ('База ' + r.status); if (/Вход устарел|Нет входа/.test(m)) выйти(m); return { ok: false, error: m }; }
+    return j;
+  } catch (e) { return { ok: false, error: 'Нет связи' }; }
+}
+function в_группу() { try { fetch(FN + '?flush', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY } }).catch(() => {}); } catch (e) {} }
+function seg(id, cb) { $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+  [...$(id).children].forEach(x => x.classList.toggle('on', x === b)); if (cb) cb(b.dataset.v); вид(); }); }
+const val = id => { const b = $(id).querySelector('.on'); return b ? b.dataset.v : null; };
+const скрыть = (id, h) => $(id).classList.toggle('hide', !!h);
+const имена = () => rpc('imena', { p_token: ТОК }).then(a => { if (Array.isArray(a)) $('imena').innerHTML = a.map(n => `<option value="${esc(n)}">`).join(''); });
+
+// ---------- вход ----------
+function выйти(m) { ТОК = ''; try { localStorage.removeItem('b9t_tok'); } catch (e) {} $('main').classList.add('hide'); $('vhod').classList.remove('hide'); $('lErr').textContent = m || ''; }
+$('lBtn').onclick = async () => {
+  $('lErr').textContent = '';
+  const r = await rpc('login', { p_login: $('lLog').value, p_pass: $('lPas').value, p_ver: 'b9t-test' }, 'b009');
+  if (!r || !r.ok) { $('lErr').textContent = (r && r.error) || 'Ошибка'; return; }
+  ТОК = r.token; try { localStorage.setItem('b9t_tok', ТОК); } catch (e) {}
+  старт();
+};
+async function старт() {
+  if (!ТОК) { выйти(); return; }
+  const с = await rpc('svod', { p_token: ТОК });
+  if (!с || !с.ok) { выйти(с && с.error); return; }
+  АДМ = !!с.admin; $('vhod').classList.add('hide'); $('main').classList.remove('hide');
+  $('kto').textContent = АДМ ? 'админ' : ''; имена(); вид();
+}
+
+// ---------- вкладки ----------
+$('tabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; ВКЛ = b.dataset.t;
+  [...$('tabs').children].forEach(x => x.classList.toggle('on', x === b));
+  ['sdelka', 'msk', 'tsh', 'otchet', 'lenta'].forEach(t => скрыть('t_' + t, t !== ВКЛ));
+  ({ msk: рисМ, tsh: рисТ, otchet: рисО, lenta: рисЛ })[ВКЛ]?.(); };
+['mNa', 'tNa', 'oNa'].forEach(i => $(i).onchange = () => ({ mNa: рисМ, tNa: рисТ, oNa: рисО })[i]());
+seg('oVid', () => рисО()); seg('oKt', () => рисК()); seg('oF', () => рисК()); $('oPoisk').addEventListener('input', () => рисК());
+
+// ---------- ЗАПИСЬ ----------
+seg('sTip', v => { скрыть('fZay', v !== 'zay'); скрыть('fMsk', v !== 'msk'); скрыть('fTez', v !== 'tez'); скрыть('fStart', v !== 'start'); $('fErr').textContent = ''; });
+seg('fNapr', v => { const b = $('fOpl').children; $('fOplL').textContent = v === 'berish' ? 'Клиент платит' : 'Клиент получает';
+  b[0].textContent = v === 'berish' ? '$ в Москве' : '$ в Москве'; b[1].textContent = '₽ по курсу'; b[2].classList.toggle('hide', v !== 'berish');
+  if (v !== 'berish' && val('fOpl') === 'usd_rub') { [...b].forEach(x => x.classList.remove('on')); b[0].classList.add('on'); }
+  const с = $('fSrazu').children; с[0].textContent = v === 'berish' ? 'В долг' : 'Должны ему'; с[1].textContent = v === 'berish' ? 'Внёс в кассу' : 'Отдали из кассы'; с[2].textContent = v === 'berish' ? 'На карту' : 'С карты'; });
+seg('fMesto'); seg('fOpl'); seg('fSrazu'); seg('mNapr'); seg('mVal'); seg('mGde'); seg('tTip'); seg('tSr'); seg('tM'); seg('stK');
+$('fPr').addEventListener('input', () => { const X = число($('fSum').value), p = число($('fPr').value); if (X && p != null) $('fUsl').value = String(Math.round(X * p) / 100).replace('.', ','); вид(); });
+$('fSum').addEventListener('input', () => { const X = число($('fSum').value), p = число($('fPr').value); if (X && p != null) $('fUsl').value = String(Math.round(X * p) / 100).replace('.', ','); });
+$('fUsl').addEventListener('input', () => { $('fPr').value = ''; });
+$('fRub').addEventListener('input', () => { $('fRub').dataset.руками = $('fRub').value ? '1' : ''; });
+document.querySelectorAll('#t_sdelka input').forEach(i => i.addEventListener('input', () => вид()));
+const место = v => (v || '').replace('Касса ', '');
+const другая = v => v === 'Касса Ташкент' ? 'Стамбул' : 'Ташкент';
+
+function вид() {
+  const тип = val('sTip');
+  if (тип === 'zay') { const o = val('fOpl'), бер = val('fNapr') === 'berish';
+    скрыть('fRubW', o !== 'rub'); скрыть('fUrW', o !== 'usd_rub'); скрыть('fSrazuW', o === 'tsh');
+    const X = число($('fSum').value), u = число($('fUsl').value) || 0, k = число($('fKurs').value);
+    if (o === 'rub' && !$('fRub').dataset.руками) $('fRub').value = X && k ? ф(Math.round((бер ? X + u : X - u) * k * 100) / 100) : ''; }
+  if (тип === 'msk') { const н = val('mNapr'); скрыть('mKtoW', н === 'perevod'); скрыть('mGdeW', val('mVal') === 'USD' && н !== 'perevod');
+    $('mGdeL').textContent = н === 'perevod' ? 'Откуда' : н === 'otdali' ? 'Откуда' : 'Куда'; if (н === 'perevod') { const b = $('mVal').children; b[1].classList.remove('on'); b[0].classList.add('on'); } }
+  if (тип === 'tez') { const п = val('tTip') === 'pokupka'; скрыть('tKursW', !п); скрыть('tSrW', !п); скрыть('tUsdW', п); скрыть('tMW', п); }
+  if (тип === 'start') скрыть('stKW', !['Касса Москва', 'Карта'].includes(val('stK')));
+  const с = собрать(); $('fGo').innerHTML = с.ош ? `<span class="mu">${с.ош}</span>` : с.go;
+}
+function собрать() {
+  const тип = val('sTip'), at = atИз($('fAt').value), note = $('fNote').value.trim();
+  const зад = at && new Date(at) < Date.now() - 1800000 ? `<br><span class="mu">📅 задним числом ${дт(at)}</span>` : '';
+  if (тип === 'zay') {
+    const имя = $('fImya').value.trim(), бер = val('fNapr') === 'berish', X = число($('fSum').value), u = число($('fUsl').value) || 0;
+    const м = val('fMesto'), o = val('fOpl'), k = число($('fKurs').value), R = число($('fRub').value), Ur = число($('fUr').value), ср = val('fSrazu');
+    if (!имя) return { ош: 'Впиши, кто' }; if (!X) return { ош: 'Впиши сумму $' };
+    const p = { imya: имя, napr: бер ? 'berish' : 'olish', summa: X, mesto: м, usluga: u, oplata: o, srazu: o === 'tsh' ? 'dolg' : ср, telefon: $('fTel').value.trim(), note, at };
+    let л = [`${бер ? '📤 БЕРИНГ' : '📥 ОЛИНГ'} <b>${ф(X)} $</b> · ${esc(имя)} · ${место(м)} — в группу, по 👍`];
+    const где = (вал, сум) => ср === 'dolg' ? (бер ? `⏳ ${esc(имя)} должен Москве <b>${ф(сум)} ${вал}</b>` : `⏳ Москва должна ${esc(имя)} <b>${ф(сум)} ${вал}</b>`)
+      : `${вал === '$' ? '💵 Москва $' : ср === 'karta' ? '💳 Карта' : '🏦 Касса Москва'} <b>${бер ? '+' : '−'}${ф(сум)} ${вал}</b> — сразу`;
+    if (o === 'usd') { л.push(где('$', бер ? X + u : X - u)); }
+    else if (o === 'rub') { if (!R && !k) return { ош: 'Впиши курс или рубли' }; const Rr = R || Math.round((бер ? X + u : X - u) * k * 100) / 100; p.rubli = Rr; p.kurs = k; л.push(где('₽', Rr) + ` <span class="mu">(по ${ф(Rr / (бер ? X + u : X - u), 2)})</span>`); }
+    else if (o === 'usd_rub') { if (!u) return { ош: 'Впиши услугу в % или $ — сколько она стоит' }; if (!Ur) return { ош: 'Впиши услугу в рублях' }; p.usluga_rub = Ur;
+      л.push(где('$', X)); л.push(где('₽', Ur) + ' <span class="mu">— услуга</span>'); }
+    else { л.push(`${бер ? '📥 ОЛИНГ' : '📤 БЕРИНГ'} <b>${ф(бер ? X + u : X - u)} $</b> · ${другая(м)} — в группу, по 👍`); }
+    if (u) л.push(`📈 прибыль <b>+${ф(u, 2)} $</b>`);
+    if (o !== 'tsh') л.push(`<span class="mu">Москва ${бер ? 'должна Ташкенту +' : 'отдаёт за Ташкент −'}${o === 'usd' ? ф(бер ? X + u : X - u) + ' $' : o === 'rub' ? ф(p.rubli) + ' ₽' : ф(X) + ' $ и ' + ф(Ur) + ' ₽'}</span>`);
+    return { fn: 'zayavka', p, go: л.join('<br>') + зад };
+  }
+  if (тип === 'msk') {
+    const н = val('mNapr'), S = число($('mSum').value), v = val('mVal'), г = val('mGde'), имя = $('mImya').value.trim();
+    if (!S) return { ош: 'Впиши сумму' };
+    if (н === 'perevod') return { fn: 'moskva', p: { perevod: true, ot: г, summa: S, note, at },
+      go: `${г === 'karta' ? 'Карта' : 'Касса Москва'} −${ф(S)} ₽ → ${г === 'karta' ? 'Касса Москва' : 'Карта'} +${ф(S)} ₽${зад}` };
+    if (!имя) return { ош: 'Впиши, кто' };
+    const к = v === 'USD' ? '💵 Москва $' : г === 'karta' ? '💳 Карта' : '🏦 Касса Москва', вл = v === 'USD' ? '$' : '₽';
+    return { fn: 'moskva', p: { imya: имя, val: v, napr: н, summa: S, gde: г, note, at },
+      go: `${к} <b>${н === 'prinyos' ? '+' : '−'}${ф(S)} ${вл}</b> · ${esc(имя)} ${н === 'prinyos' ? 'принёс (гасит долг / даёт в долг)' : 'получил (гасим долг / даём в долг)'}${зад}` };
+  }
+  if (тип === 'tez') {
+    const п = val('tTip') === 'pokupka', U = число($('tU').value);
+    if (!U) return { ош: 'Впиши USDT' };
+    if (п) { const k = число($('tKurs').value); if (!k) return { ош: 'Впиши курс' }; const ср = val('tSr');
+      return { fn: 'tezer', p: { tip: 'pokupka', usdt: U, kurs: k, srazu: ср, note, at },
+        go: `💠 купили <b>${ф(U)} USDT</b> за <b>${ф(Math.round(U * k * 100) / 100)} ₽</b> (${ф(k, 2)})<br>${ср === 'dolg' ? '⏳ Москва должна продавцу' : (ср === 'karta' ? '💳 Карта' : '🏦 Касса Москва') + ' −' + ф(Math.round(U * k * 100) / 100) + ' ₽'}<br><span class="mu">в группу — сообщение без лайка</span>${зад}` }; }
+    const X = число($('tUsd').value); if (!X) return { ош: 'Впиши, сколько $ взяли' };
+    return { fn: 'tezer', p: { tip: 'prodazha', usdt: U, usd: X, mesto: val('tM'), note, at },
+      go: `💠 ${место(val('tM'))} взял <b>${ф(X)} $</b> за <b>${ф(U)} USDT</b><br><span class="mu">прибыль посчитается сама: ${ф(X)} $ − стоимость USDT · в группу — без лайка</span>${зад}` };
+  }
+  const кс = val('stK'), S = число($('stS').value), k = число($('stKurs').value), руб = ['Касса Москва', 'Карта'].includes(кс);
+  if (!S) return { ош: 'Впиши сумму' }; if (руб && !k) return { ош: 'Впиши курс' };
+  return { fn: 'start', p: { kassa: кс, summa: S, kurs: руб ? k : null, at },
+    go: `🔒 Старт: ${esc(кс)} +${ф(S)} ${руб ? '₽' : '$'}${руб ? ` по ${ф(k, 2)} = <b>${ф(Math.round(S / k * 100) / 100, 2)} $</b>` : ''} — несгораемая сумма${зад}` };
+}
+$('fBtn').onclick = async () => {
+  const с = собрать(); $('fErr').textContent = '';
+  if (с.ош) { $('fErr').textContent = с.ош; return; }
+  $('fBtn').disabled = true; $('fBtn').textContent = 'Записываю…';
+  const r = await rpc(с.fn, { p_token: ТОК, p: с.p });
+  $('fBtn').disabled = false; $('fBtn').textContent = 'Записать';
+  if (!r || !r.ok) { $('fErr').textContent = (r && r.error) || 'Не записано'; return; }
+  в_группу(); тост('Записано · №' + r.id);
+  ['fImya', 'fSum', 'fPr', 'fUsl', 'fKurs', 'fRub', 'fUr', 'fTel', 'fNote', 'fAt', 'mImya', 'mSum', 'tU', 'tKurs', 'tUsd', 'stS', 'stKurs'].forEach(i => { $(i).value = ''; });
+  $('fRub').dataset.руками = ''; вид(); имена();
+};
+
+// ---------- окно ----------
+function окно(html, ок) {
+  $('modBox').innerHTML = html + '<div class="err" id="mErr"></div><div class="two"><button class="btn sec2" id="mNo">Закрыть</button><button class="btn" id="mOk">Готово</button></div>';
+  $('mod').classList.remove('hide');
+  $('mNo').onclick = () => $('mod').classList.add('hide');
+  $('mOk').onclick = async () => { $('mOk').disabled = true; const e = await ок(); $('mOk').disabled = false;
+    if (e) { $('mErr').textContent = e; return; } $('mod').classList.add('hide'); };
+}
+$('mod').onclick = e => { if (e.target === $('mod')) $('mod').classList.add('hide'); };
+const свод = id => rpc('svod', { p_token: ТОК, p_na: $(id).value || null });
+const стр = (t, v, кл, мю) => `<div class="row"><span>${t}${мю ? ` <span class="mu">${мю}</span>` : ''}</span><b class="n ${кл || ''}">${v}</b></div>`;
+const ок0 = x => Math.abs(x) < 0.01;
+
+// ---------- общие куски отчётов ----------
+const ИСТ = { usluga: '✈ Услуги', kurs: '₽ Курс рублей', tezer: '💠 Тезер', drugoe: 'Другое' };
+const цв = v => v < -0.004 ? 'r' : v > 0.004 ? 'p' : 'mu';
+const плитка = (иконка, имя, v, вл, под) => `<div><div class="mu">${иконка} ${имя}</div><div class="v n ${v < -0.004 ? 'r' : ''}">${ф(v, вл === '$' && Math.abs(v % 1) > 0.004 ? 2 : 0)} ${вл}</div>${под ? `<div class="mu">${под}</div>` : ''}</div>`;
+const пусто = t => `<div class="mu" style="padding:6px 0">${t || '—'}</div>`;
+const возраст = t => { const ч = Math.floor((Date.now() - new Date(t)) / 3600000); return ч < 1 ? 'только что' : ч < 24 ? ч + ' ч' : Math.floor(ч / 24) + ' дн'; };
+
+// ---------- МОСКВА: свой отчёт (₽ и $ отдельно, без курса) ----------
+async function рисМ() {
+  const с = await свод('mNa'); if (!с || !с.ok) { $('mBox').innerHTML = `<div class="err">${esc(с && с.error)}</div>`; return; }
+  const R = с.msk.rub, U = с.msk.usd;
+  const люди = {};                                  // клиент → {r, u}
+  [[R, 'r'], [U, 'u']].forEach(([B, к]) => { B.nam.forEach(x => { (люди[x.name] = люди[x.name] || { r: 0, u: 0 })[к] = -x.summa; });
+    B.my.forEach(x => { (люди[x.name] = люди[x.name] || { r: 0, u: 0 })[к] = x.summa; }); });
+  const список = знак => Object.entries(люди).filter(([, v]) => знак < 0 ? v.r < 0 || v.u < 0 : v.r > 0 || v.u > 0)
+    .sort((a, b) => Math.abs(b[1].r) + Math.abs(b[1].u) * 90 - Math.abs(a[1].r) - Math.abs(a[1].u) * 90)
+    .map(([имя, v]) => {
+      const кн = [];
+      if (знак < 0 ? v.r < 0 : v.r > 0) кн.push(`<button class="mini" data-pr="${esc(имя)}|${знак < 0 ? 'prinyos' : 'otdali'}|RUB|kassa|${Math.abs(v.r)}">${знак < 0 ? 'Принёс в кассу' : 'Из кассы'}</button><button class="mini" data-pr="${esc(имя)}|${знак < 0 ? 'prinyos' : 'otdali'}|RUB|karta|${Math.abs(v.r)}">${знак < 0 ? 'На карту' : 'С карты'}</button>`);
+      if (знак < 0 ? v.u < 0 : v.u > 0) кн.push(`<button class="mini" data-pr="${esc(имя)}|${знак < 0 ? 'prinyos' : 'otdali'}|USD|kassa|${Math.abs(v.u)}">${знак < 0 ? 'Принёс $' : 'Отдали $'}</button>`);
+      const сум = (знак < 0 ? v.r < 0 : v.r > 0) ? `${ф(Math.abs(v.r))} ₽` : '';
+      const сумU = (знак < 0 ? v.u < 0 : v.u > 0) ? `${ф(Math.abs(v.u))} $` : '';
+      return `<div class="z"><div class="hd"><b class="cl" data-kl="${esc(имя)}">${esc(имя)} ›</b><b class="n ${знак < 0 ? 'r' : 'p'}">${[сум, сумU].filter(Boolean).join(' · ')}</b></div><div class="acts" style="justify-content:flex-end">${кн.join('')}</div></div>`;
+    }).join('') || пусто(знак < 0 ? 'никто не должен' : 'никому не должны');
+  const кР = R.kassy.reduce((a, k) => a + k.summa, 0), кU = U.kassy.reduce((a, k) => a + k.summa, 0);
+  const нР = R.nam.reduce((a, x) => a + x.summa, 0), нU = U.nam.reduce((a, x) => a + x.summa, 0);
+  const мР = R.my.reduce((a, x) => a + x.summa, 0), мU = U.my.reduce((a, x) => a + x.summa, 0);
+  $('mBox').innerHTML = `
+    <div class="hero"><div class="lbl">Москва должна Ташкенту — по всем заявкам, как будто всё уже взято / отдано</div>
+      <div class="two" style="margin-top:6px"><div><div class="big y">${ф(R.tashkent)} ₽</div><div class="mu">${с.svyaz.rub ? '✓ сходится с Ташкентом' : '⚠ не сходится'}</div></div>
+        <div><div class="big y">${ф(U.tashkent)} $</div><div class="mu">${с.svyaz.usd ? '✓ сходится с Ташкентом' : '⚠ не сходится'}</div></div></div></div>
+    <div class="sec">🏦 КАССЫ</div>
+    <div class="kp three">${R.kassy.map(k => плитка(k.name === 'Карта' ? '💳' : '🏦', k.name === 'Касса Москва' ? 'Касса' : k.name, k.summa, '₽')).join('')}${U.kassy.map(k => плитка('💵', 'Москва $', k.summa, '$')).join('')}</div>
+    <div class="sec">🔴 ДОЛЖНЫ НАМ · ${ф(нР)} ₽ · ${ф(нU)} $</div><div class="card">${список(-1)}</div>
+    <div class="sec">🟢 МЫ ДОЛЖНЫ · ${ф(мР)} ₽ · ${ф(мU)} $</div><div class="card">${список(1)}</div>
+    <div class="sec">⚖️ ПРОВЕРКА</div>
+    <div class="card"><table class="tbl"><tr><th></th><th>₽</th><th>$</th></tr>
+      <tr><td>Кассы</td><td class="n">${ф(кР)}</td><td class="n">${ф(кU)}</td></tr>
+      <tr><td>+ Должны нам</td><td class="n r">${ф(нР)}</td><td class="n r">${ф(нU)}</td></tr>
+      <tr><td>− Мы должны</td><td class="n p">${ф(мР)}</td><td class="n p">${ф(мU)}</td></tr>
+      <tr><td><b>= Долг Ташкенту</b></td><td class="n"><b>${ф(кР + нР - мР)}</b></td><td class="n"><b>${ф(кU + нU - мU)}</b></td></tr>
+      <tr><td>Фарқ</td><td class="n ${ок0(R.farq) ? 'p' : 'r'}">${ок0(R.farq) ? '0 ✓' : ф(R.farq)}</td><td class="n ${ок0(U.farq) ? 'p' : 'r'}">${ок0(U.farq) ? '0 ✓' : ф(U.farq)}</td></tr></table></div>`;
+  $('mBox').querySelectorAll('[data-kl]').forEach(e => e.onclick = () => историяК(e.dataset.kl));
+  $('mBox').querySelectorAll('[data-pr]').forEach(b => b.onclick = () => {
+    const [имя, н, в, где, сум] = b.dataset.pr.split('|');
+    окно(`<b>${esc(имя)}</b> · ${н === 'prinyos' ? 'принёс' : 'отдали'} ${в === 'USD' ? '$ (Москва $)' : где === 'karta' ? '₽ (карта)' : '₽ (касса)'}
+      <label>Сумма (можно часть)</label><input id="wS" class="big" inputmode="decimal" value="${ф(сум)}">
+      <label>Дата и время (МСК) — пусто = сейчас</label><input id="wAt" type="datetime-local">`, async () => {
+      const r = await rpc('moskva', { p_token: ТОК, p: { imya: имя, val: в, napr: н, summa: число($('wS').value), gde: где, at: atИз($('wAt').value) } });
+      if (!r || !r.ok) return (r && r.error) || 'Ошибка'; тост('Записано'); рисМ();
+    });
+  });
+}
+
+// ---------- ТАШКЕНТ: долларовый контур ----------
+function кнопкиВыдачи(box, после) {
+  box.querySelectorAll('[data-vyp]').forEach(b => b.onclick = () => окно(
+    `<b>Выдано задним числом</b><div class="mu">Без 👍 — в группу уйдёт ✅ с пометкой</div><label>Когда (МСК)</label><input id="wAt" type="datetime-local" value="${сейчасМск()}">`,
+    async () => { const r = await rpc('vypolnit', { p_token: ТОК, p_zayavka: +b.dataset.vyp, p_at: atИз($('wAt').value) });
+      if (!r || !r.ok) return (r && r.error) || 'Ошибка'; в_группу(); тост('Исполнено'); после(); }));
+}
+const заявкаСтр = z => `<div class="z"><div class="hd"><span>${z.tip === 'olish' ? '📥 ОЛИНГ' : '📤 БЕРИНГ'} · <b>${esc(z.imya)}</b> <span class="mu">№${z.zapis}</span></span><b class="n ${z.tip === 'olish' ? 'r' : 'p'}">${ф(z.summa)} $</b></div>
+  <div class="mu">${esc(z.mesto)} · ждёт ${возраст(z.at)} · с ${дт(z.at)}</div>${АДМ ? `<div class="acts"><button class="mini" data-vyp="${z.id}">Выдано задним числом</button></div>` : ''}</div>`;
+async function рисТ() {
+  const с = await свод('tNa'); if (!с || !с.ok) { $('tBox').innerHTML = `<div class="err">${esc(с && с.error)}</div>`; return; }
+  const T = с.tsh, ка = n => T.kassy.find(k => k.name === n).summa;
+  const кл = T.klienty.map(x => ({ ...x, ост: Math.round((x.summa - x.vydat + x.vzyat) * 100) / 100 }));
+  const долж = кл.filter(x => x.ост < -0.004).sort((a, b) => a.ост - b.ост), кред = кл.filter(x => x.ост > 0.004).sort((a, b) => b.ост - a.ост);
+  const строкаК = x => `<div class="row cl" data-kl="${esc(x.name)}"><span>${esc(x.name)} ›${x.vydat || x.vzyat ? ` <span class="tag">⏳ ${x.vydat ? 'выдать ' + ф(x.vydat) : ''}${x.vydat && x.vzyat ? ' · ' : ''}${x.vzyat ? 'взять ' + ф(x.vzyat) : ''}</span>` : ''}</span><b class="n ${цв(x.ост)}">${ф(Math.abs(x.ост), 2)} $</b></div>`;
+  const сД = долж.reduce((a, x) => a - x.ост, 0), сК = кред.reduce((a, x) => a + x.ост, 0);
+  const к = T.kassy.reduce((a, k) => a + Math.max(k.summa, 0), 0), кМ = T.kassy.reduce((a, k) => a + Math.min(k.summa, 0), 0);
+  const нам = к + T.rubli.usd + T.dollari + T.tezer.usd + сД + T.zhdut_vzyat, мы = сК + T.zhdut_vydat - кМ;
+  const P = T.pribyl_ist || {}, яч = (п, и) => ф(((P[п] || {})[и]) || 0, 2), итП = п => Object.values(P[п] || {}).reduce((a, x) => a + x, 0);
+  const ждут = с.zhdut;
+  $('tBox').innerHTML = `
+    <div class="hero"><div class="lbl">🇷🇺 В Москве должно быть — по заявкам</div>
+      <div class="two" style="margin-top:6px"><div><div class="big">${ф(T.rubli.summa)} ₽</div><div class="mu">≈ ${ф(T.rubli.usd, 2)} $${T.rubli.summa > 0 && T.rubli.kurs ? ' · ср. курс ' + ф(T.rubli.kurs, 2) : ''}</div></div>
+        <div><div class="big">${ф(T.dollari)} $</div><div class="mu">наличными в Москве</div></div></div></div>
+    <div class="sec">🏦 КАССЫ И ТЕЗЕР</div>
+    <div class="kp three">${плитка('🏦', 'Ташкент', ка('Касса Ташкент'), '$', ка('Касса Ташкент') < 0 ? 'в минусе' : '')}${плитка('🇹🇷', 'Стамбул', ка('Касса Стамбул'), '$', ка('Касса Стамбул') < -0.004 ? 'мы должны Стамбулу' : '')}${плитка('💠', 'Тезер', T.tezer.summa, 'USDT', '≈ ' + ф(T.tezer.usd, 2) + ' $')}</div>
+    <div class="sec">⏳ НЕИСПОЛНЕННЫЕ ЗАЯВКИ · выдать ${ф(T.zhdut_vydat)} $ · взять ${ф(T.zhdut_vzyat)} $</div>
+    <div class="card">${ждут.length ? ждут.map(заявкаСтр).join('') : пусто('все исполнены ✓')}</div>
+    <div class="sec">🔴 ДОЛЖНИКИ · ${ф(сД, 2)} $ <span class="mu">— после исполнения заявок</span></div><div class="card">${долж.map(строкаК).join('') || пусто('никто')}</div>
+    <div class="sec">🟢 КРЕДИТОРЫ · ${ф(сК, 2)} $</div><div class="card">${кред.map(строкаК).join('') || пусто('никому')}</div>
+    <div class="sec">📈 ПРИБЫЛЬ</div>
+    <div class="card"><table class="tbl"><tr><th></th><th>Сегодня</th><th>Месяц</th><th>Всё время</th></tr>
+      ${['usluga', 'kurs', 'tezer'].map(и => `<tr><td>${ИСТ[и]}</td><td class="n">${яч('den', и)}</td><td class="n">${яч('mes', и)}</td><td class="n">${яч('vse', и)}</td></tr>`).join('')}
+      <tr><td><b>Итого</b></td><td class="n p"><b>${ф(итП('den'), 2)}</b></td><td class="n p"><b>${ф(итП('mes'), 2)}</b></td><td class="n p"><b>${ф(итП('vse'), 2)}</b></td></tr></table></div>
+    <div class="sec">⚖️ БАЛАНС ТАШКЕНТА</div>
+    <div class="card"><table class="tbl">
+      <tr><th>Нам должны / у нас</th><th>$</th></tr>
+      ${к ? `<tr><td>Кассы</td><td class="n">${ф(к, 2)}</td></tr>` : ''}
+      <tr><td>Рубли у Москвы <span class="mu">${ф(T.rubli.summa)} ₽</span></td><td class="n">${ф(T.rubli.usd, 2)}</td></tr>
+      <tr><td>Доллары у Москвы</td><td class="n">${ф(T.dollari, 2)}</td></tr>
+      ${!ок0(T.tezer.usd) ? `<tr><td>Тезер <span class="mu">${ф(T.tezer.summa)} USDT</span></td><td class="n">${ф(T.tezer.usd, 2)}</td></tr>` : ''}
+      <tr><td>Должники</td><td class="n">${ф(сД, 2)}</td></tr>
+      <tr><td>Взять по заявкам</td><td class="n">${ф(T.zhdut_vzyat, 2)}</td></tr>
+      <tr><td><b>Итого</b></td><td class="n"><b>${ф(нам, 2)}</b></td></tr>
+      <tr><th>Мы должны</th><th></th></tr>
+      <tr><td>Кредиторы</td><td class="n">${ф(сК, 2)}</td></tr>
+      <tr><td>Выдать по заявкам</td><td class="n">${ф(T.zhdut_vydat, 2)}</td></tr>
+      ${кМ ? `<tr><td>Кассы в минусе</td><td class="n">${ф(-кМ, 2)}</td></tr>` : ''}
+      <tr><td><b>Итого</b></td><td class="n"><b>${ф(мы, 2)}</b></td></tr>
+      <tr><th>Разница</th><th></th></tr>
+      <tr><td>🔒 Старт (несгораемый)</td><td class="n">${ф(T.start, 2)}</td></tr>
+      <tr><td>📈 Прибыль</td><td class="n p">${ф(T.pribyl, 2)}</td></tr>
+      <tr><td><b>Нам − мы = старт + прибыль</b></td><td class="n ${ок0(нам - мы - T.start - T.pribyl) ? 'p' : 'r'}"><b>${ок0(нам - мы - T.start - T.pribyl) ? '✓ ' + ф(нам - мы, 2) : '⚠ ' + ф(нам - мы - T.start - T.pribyl, 2)}</b></td></tr>
+    </table></div>`;
+  $('tBox').querySelectorAll('[data-kl]').forEach(e => e.onclick = () => историяК(e.dataset.kl));
+  кнопкиВыдачи($('tBox'), рисТ);
+}
+
+// ---------- ОТЧЁТ: клиенты · висящие · сверка ----------
+let КЛ = [];
+async function грузК() { const r = await rpc('klienty', { p_token: ТОК, p_na: $('oNa').value || null }); КЛ = r && r.ok ? r.klienty : []; рисК(); }
+function рисК() {
+  const где = val('oKt'), фл = val('oF'), q = $('oPoisk').value.trim().toLowerCase();
+  const сп = КЛ.map(x => ({ ...x, ост: Math.round((x.tsh - x.vydat + x.vzyat) * 100) / 100 })).filter(x => !q || x.name.toLowerCase().includes(q));
+  let html;
+  if (где === 'msk') {
+    const есть = x => !ок0(x.msk_rub) || !ок0(x.msk_usd);
+    const m = сп.filter(x => фл === 'all' ? есть(x) || q : фл === 'nam' ? x.msk_rub < -0.004 || x.msk_usd < -0.004 : x.msk_rub > 0.004 || x.msk_usd > 0.004);
+    const тН = { r: 0, u: 0 }, тМ = { r: 0, u: 0 }; КЛ.forEach(x => { if (x.msk_rub < 0) тН.r -= x.msk_rub; else тМ.r += x.msk_rub; if (x.msk_usd < 0) тН.u -= x.msk_usd; else тМ.u += x.msk_usd; });
+    html = `<div class="card"><table class="tbl"><tr><th>Москва</th><th>₽</th><th>$</th></tr>
+        <tr><td>🔴 Должны нам</td><td class="n r">${ф(тН.r)}</td><td class="n r">${ф(тН.u)}</td></tr>
+        <tr><td>🟢 Мы должны</td><td class="n p">${ф(тМ.r)}</td><td class="n p">${ф(тМ.u)}</td></tr></table></div>
+      <div class="card"><table class="tbl"><tr><th>Клиент</th><th>₽</th><th>$</th></tr>${m.map(x => `<tr class="cl" data-kl="${esc(x.name)}"><td>${esc(x.name)} ›</td>
+        <td class="n ${цв(x.msk_rub)}">${ок0(x.msk_rub) ? '·' : ф(x.msk_rub)}</td><td class="n ${цв(x.msk_usd)}">${ок0(x.msk_usd) ? '·' : ф(x.msk_usd)}</td></tr>`).join('') || '<tr><td colspan="3" class="mu">никого</td></tr>'}</table>
+        <div class="mu" style="margin-top:6px">− он должен · + мы должны</div></div>`;
+  } else {
+    const есть = x => !ок0(x.ост) || x.vydat || x.vzyat;
+    const t = сп.filter(x => фл === 'all' ? есть(x) || q : фл === 'nam' ? x.ост < -0.004 : x.ост > 0.004);
+    const тН = КЛ.reduce((a, x) => a + Math.max(0, -(x.tsh - x.vydat + x.vzyat)), 0), тМ = КЛ.reduce((a, x) => a + Math.max(0, x.tsh - x.vydat + x.vzyat), 0);
+    html = `<div class="card"><table class="tbl"><tr><th>Ташкент</th><th>$</th></tr>
+        <tr><td>🔴 Должники</td><td class="n r">${ф(тН, 2)}</td></tr><tr><td>🟢 Кредиторы</td><td class="n p">${ф(тМ, 2)}</td></tr></table></div>
+      <div class="card"><table class="tbl"><tr><th>Клиент</th><th>Остаток $</th><th>⏳ Заявки</th></tr>${t.map(x => `<tr class="cl" data-kl="${esc(x.name)}"><td>${esc(x.name)} ›</td>
+        <td class="n ${цв(x.ост)}">${ок0(x.ост) ? '0 ✓' : ф(x.ост, 2)}</td><td class="n y">${[x.vydat ? '📤 ' + ф(x.vydat) : '', x.vzyat ? '📥 ' + ф(x.vzyat) : ''].filter(Boolean).join(' ') || '<span class="mu">·</span>'}</td></tr>`).join('') || '<tr><td colspan="3" class="mu">никого</td></tr>'}</table>
+        <div class="mu" style="margin-top:6px">Остаток — после исполнения всех заявок · − он должен · + мы должны</div></div>`;
+  }
+  $('oKl').innerHTML = html;
+  $('oKl').querySelectorAll('[data-kl]').forEach(e => e.onclick = () => историяК(e.dataset.kl));
+}
+async function рисВ() {
+  const [с, к] = await Promise.all([rpc('svod', { p_token: ТОК, p_na: $('oNa').value || null }), rpc('klienty', { p_token: ТОК, p_na: $('oNa').value || null })]);
+  if (!с || !с.ok) { $('oVis').innerHTML = `<div class="err">${esc(с && с.error)}</div>`; return; }
+  const пМ = (к && к.ok ? к.klienty : []).filter(x => !ок0(x.msk_rub) || !ок0(x.msk_usd));
+  const гр = ['Ташкент', 'Стамбул'].map(m => [m, с.zhdut.filter(z => z.mesto === m)]);
+  $('oVis').innerHTML = гр.map(([m, a]) => `<div class="sec">⏳ ${m.toUpperCase()} · ЖДУТ 👍 · выдать ${ф(a.filter(z => z.tip === 'berish').reduce((t, z) => t + z.summa, 0))} $ · взять ${ф(a.filter(z => z.tip === 'olish').reduce((t, z) => t + z.summa, 0))} $</div>
+      <div class="card">${a.length ? a.map(заявкаСтр).join('') : пусто('нет')}</div>`).join('') +
+    `<div class="sec">🇷🇺 МОСКВА · ДЕНЬГИ ЕЩЁ НЕ ПРОШЛИ ЧЕРЕЗ КАССУ</div>
+     <div class="card">${пМ.length ? пМ.map(x => `<div class="row cl" data-kl="${esc(x.name)}"><span>${esc(x.name)} › <span class="mu">${x.msk_rub < 0 || x.msk_usd < 0 ? 'не донёс' : 'не отдали'}</span></span>
+       <b class="n ${x.msk_rub < 0 || x.msk_usd < 0 ? 'r' : 'p'}">${[ок0(x.msk_rub) ? '' : ф(Math.abs(x.msk_rub)) + ' ₽', ок0(x.msk_usd) ? '' : ф(Math.abs(x.msk_usd)) + ' $'].filter(Boolean).join(' · ')}</b></div>`).join('') : пусто('всё рассчитано ✓')}</div>`;
+  $('oVis').querySelectorAll('[data-kl]').forEach(e => e.onclick = () => историяК(e.dataset.kl));
+  кнопкиВыдачи($('oVis'), рисВ);
+}
+async function историяК(имя) {
+  const r = await rpc('lenta', { p_token: ТОК, p_ot: '2000-01-01', p_do: $('oNa').value || сегодня(), p_imya: имя });
+  if (!r || !r.ok) return;
+  const мой = s => s.vid === 'chelovek' && s.schet.toLowerCase() === имя.toLowerCase();
+  let о = { r: 0, u: 0, t: 0 };
+  const строки = r.zapisi.filter(z => z.status === 'живая').slice().reverse().map(z => {
+    const д = { r: 0, u: 0, t: 0 }; let пр = 0;
+    (z.stroki || []).forEach(s => { if (мой(s)) { if (s.kontur === 'MSK') д[s.val === 'RUB' ? 'r' : 'u'] += s.summa; else д.t += s.summa; } if (s.vid === 'pribyl') пр += s.usd; });
+    о = { r: о.r + д.r, u: о.u + д.u, t: о.t + д.t }; return { z, д, о: { ...о }, пр };
+  }).reverse();
+  const п = (v, вл) => ок0(v) ? '' : `${v > 0 ? '+' : '−'}${ф(Math.abs(v), вл.includes('$') && Math.abs(v % 1) > 0.004 ? 2 : 0)} ${вл}`;
+  const ит = x => [ок0(x.r) ? '' : `Москва ${ф(x.r)} ₽`, ок0(x.u) ? '' : `Москва ${ф(x.u)} $`, ок0(x.t) ? '' : `Ташкент ${ф(x.t, 2)} $`].filter(Boolean).join(' · ') || '0 ✓';
+  const ждёт = r.zapisi.flatMap(z => z.status === 'живая' ? (z.zayavki || []).filter(y => y.status === 'ждёт').map(y => ({ ...y, n: z.id })) : []);
+  const текст = `${имя}\n` + строки.slice().reverse().map(({ z, д }) => `${дт(z.at)} №${z.id} ${[п(д.r, '₽ Москва'), п(д.u, '$ Москва'), п(д.t, '$ Ташкент')].filter(Boolean).join(' ')}`).join('\n')
+    + `\n─────\nОстаток: ${ит(о)}${ждёт.length ? '\nЖдёт: ' + ждёт.map(y => (y.tip === 'olish' ? 'взять ' : 'выдать ') + ф(y.summa) + ' $ ' + y.mesto).join(', ') : ''}\n(+ мы должны, − вы должны)`;
+  окно(`<div class="hd"><b style="font-size:18px">${esc(имя)}</b><span class="mu">+ мы должны · − он должен</span></div>
+    <div class="kp three" style="margin-top:8px">${плитка('🇷🇺', 'Москва ₽', о.r, '₽')}${плитка('🇷🇺', 'Москва $', о.u, '$')}${плитка('🇺🇿', 'Ташкент $', о.t, '$')}</div>
+    ${ждёт.length ? `<div class="card">${ждёт.map(y => `<div class="st y">⏳ №${y.n} ждёт 👍: ${y.tip === 'olish' ? 'взять' : 'выдать'} ${ф(y.summa)} $ · ${esc(y.mesto)}</div>`).join('')}</div>` : ''}
+    <div class="card" style="max-height:46vh;overflow:auto">${строки.map(({ z, д, о, пр }) => `<div class="z"><div class="hd"><span>${ТИП[z.tip] || z.tip} · №${z.id}${z.kurs ? ' · ' + ф(z.kurs, 2) : ''}</span><span class="mu">${дт(z.at)}</span></div>
+      <div class="st">${[п(д.r, '₽ Москва'), п(д.u, '$ Москва'), п(д.t, '$ Ташкент')].filter(Boolean).join(' · ') || '<span class="mu">без изменения остатка</span>'}</div>
+      ${(z.zayavki || []).map(y => `<div class="st mu">${y.tip === 'olish' ? '📥' : '📤'} ${ф(y.summa)} $ ${esc(y.mesto)} — ${y.status === 'выполнено' ? '✅ ' + дт(y.vypolneno) : y.status === 'ждёт' ? '⏳ ждёт 👍' : 'отменена'}</div>`).join('')}
+      ${!ок0(пр) && АДМ ? `<div class="st p">📈 прибыль ${ф(пр, 2)} $</div>` : ''}
+      <div class="st mu">остаток после: ${ит(о)}</div></div>`).join('') || пусто()}</div>`, async () => {
+      try { await navigator.clipboard.writeText(текст); тост('Скопировано'); } catch (e) { return 'Не удалось скопировать'; } });
+  $('mOk').textContent = 'Копировать для клиента';
+}
+
+// ---------- СВЕРКА ----------
+async function рисО() {
+  const вид = val('oVid'); скрыть('oKlW', вид !== 'kl'); скрыть('oVis', вид !== 'vis'); скрыть('oBox', вид !== 'sv');
+  if (вид === 'kl') return грузК();
+  if (вид === 'vis') return рисВ();
+  const на = $('oNa').value || сегодня();
+  const вчера = new Date(new Date(на + 'T12:00:00Z').getTime() - 86400000).toISOString().slice(0, 10);
+  const [с, с0] = await Promise.all([rpc('svod', { p_token: ТОК, p_na: на }), rpc('svod', { p_token: ТОК, p_na: вчера })]);
+  if (!с || !с.ok) { $('oBox').innerHTML = `<div class="err">${esc(с && с.error)}</div>`; return; }
+  const ст = (B, B0, таш, сх) => { const к = B.kassy.reduce((a, x) => a + x.summa, 0), н = B.nam.reduce((a, x) => a + x.summa, 0), м = B.my.reduce((a, x) => a + x.summa, 0);
+    return { к, н, м, итог: к + н - м, таш, сх, день: B.tashkent - B0.tashkent }; };
+  const Р = ст(с.msk.rub, с0.msk.rub, с.tsh.rubli.summa, с.svyaz.rub), Д = ст(с.msk.usd, с0.msk.usd, с.tsh.dollari, с.svyaz.usd);
+  const строка = (t, a, b, кл) => `<tr><td>${t}</td><td class="n ${кл || ''}">${a}</td><td class="n ${кл || ''}">${b}</td></tr>`;
+  $('oBox').innerHTML = `
+    <div class="hero"><div class="lbl">Отчёт Москвы и отчёт Ташкента — отдельно, связь одна: долг Москвы = «у Москвы» в Ташкенте</div></div>
+    <div class="card"><table class="tbl"><tr><th></th><th>₽</th><th>$</th></tr>
+      ${строка('🇺🇿 Ташкент: «у Москвы»', ф(Р.таш), ф(Д.таш))}
+      <tr><th colspan="3" style="text-align:left">🇷🇺 Москва: где эти деньги</th></tr>
+      ${строка('Кассы', ф(Р.к), ф(Д.к))}
+      ${строка('+ Не донесли', ф(Р.н), ф(Д.н), 'r')}
+      ${строка('− Не отдали', ф(Р.м), ф(Д.м), 'p')}
+      ${строка('<b>= Долг Ташкенту</b>', '<b>' + ф(Р.итог) + '</b>', '<b>' + ф(Д.итог) + '</b>')}
+      ${строка('Сверка', Р.сх ? '✓' : '⚠ ' + ф(Р.итог - Р.таш), Д.сх ? '✓' : '⚠ ' + ф(Д.итог - Д.таш), Р.сх && Д.сх ? 'p' : 'r')}
+      ${строка('За день', (Р.день >= 0 ? '+' : '') + ф(Р.день), (Д.день >= 0 ? '+' : '') + ф(Д.день))}
+    </table></div>
+    <div class="card">${стр('Фарқ Москва ₽ · Москва $ · Ташкент', [с.msk.rub.farq, с.msk.usd.farq, с.tsh.farq].map(x => ок0(x) ? '0 ✓' : ф(x, 2)).join(' · '),
+      [с.msk.rub.farq, с.msk.usd.farq, с.tsh.farq].every(ок0) ? 'p' : 'r')}</div>`;
+}
+
+// ---------- ЛЕНТА ----------
+seg('lPer', () => рисЛ()); $('lImya').addEventListener('change', () => рисЛ());
+const ТИП = { zayavka: '⇄ Заявка', moskva: '🏦 Москва', tezer: '💠 Тезер', start: '🔒 Старт' };
+async function рисЛ() {
+  const дн = +val('lPer'), до = сегодня(), от = new Date(Date.now() - (дн - 1) * 86400000 + 3 * 3600000).toISOString().slice(0, 10);
+  const r = await rpc('lenta', { p_token: ТОК, p_ot: от, p_do: до, p_imya: $('lImya').value.trim() || null });
+  if (!r || !r.ok) { $('lBox').innerHTML = `<div class="err">${esc(r && r.error)}</div>`; return; }
+  const вл = s => s.val === 'RUB' ? '₽' : s.val === 'USDT' ? 'USDT' : '$';
+  $('lBox').innerHTML = `<div class="card">${r.zapisi.length ? r.zapisi.map(z => {
+    const жив = z.status === 'живая', стр = (z.stroki || []).filter(s => !s.zay);
+    const м = стр.filter(s => s.kontur === 'MSK' && s.vid !== 'svyaz').map(s => `${esc(s.schet)} ${s.summa > 0 ? '+' : '−'}${ф(Math.abs(s.summa))} ${вл(s)}`).join(' · ');
+    const т = стр.filter(s => s.kontur === 'TSH').map(s => `${esc(s.schet)} ${s.usd > 0 ? '+' : '−'}${ф(Math.abs(s.usd), 2)} $`).join(' · ');
+    const зв = (z.zayavki || []).map(y => `<div class="st">${y.tip === 'olish' ? '📥 ОЛИНГ' : '📤 БЕРИНГ'} ${ф(y.summa)} $ · ${esc(y.mesto)} — ${y.status === 'выполнено' ? `<span class="p">✅ ${esc(y.vypolnil)} · ${дт(y.vypolneno)}${y.zadnim ? ' · задним числом' : ''}</span>` : y.status === 'ждёт' ? '<span class="y">⏳ ждёт 👍</span>' : '<span class="mu">отменена</span>'}</div>
+      ${АДМ && жив && y.status === 'выполнено' ? `<div class="acts"><button class="mini" data-dv="${y.id}">✎ Дата выдачи</button><button class="mini r" data-sn="${y.id}">Снять выдачу</button></div>` : ''}`).join('');
+    return `<div class="z" style="${жив ? '' : 'opacity:.5'}"><div class="hd"><b>${ТИП[z.tip] || z.tip} · №${z.id}${z.imya ? ' · ' + esc(z.imya) : ''}</b><span class="mu">${дт(z.at)}</span></div>
+      ${м ? `<div class="mu">🇷🇺 ${м}</div>` : ''}${т ? `<div class="mu">🇺🇿 ${т}</div>` : ''}${зв}
+      ${(() => { const пр = (z.stroki || []).filter(s => s.vid === 'pribyl').reduce((a, s) => a + s.usd, 0); return АДМ && !ок0(пр) ? `<div class="st ${пр > 0 ? 'p' : 'r'}">📈 прибыль ${ф(пр, 2)} $</div>` : ''; })()}
+      <div class="mu">записал ${esc(z.kto)}${z.kurs ? ' · курс ' + ф(z.kurs, 2) : ''}${z.note ? ' · ' + esc(z.note) : ''}${жив ? '' : ' · ❌ отменена'}</div>
+      ${АДМ && жив ? `<div class="acts"><button class="mini r" data-ot="${z.id}">Отменить запись</button></div>` : ''}</div>`; }).join('') : '<div class="mu" style="padding:8px 0">пусто</div>'}</div>`;
+  $('lBox').querySelectorAll('[data-dv]').forEach(b => b.onclick = () => окно(
+    `<b>✎ Дата выдачи</b><div class="mu">Касса пересчитается на эту дату, в группу уйдёт ✏️</div><label>Когда (МСК)</label><input id="wAt" type="datetime-local" value="${сейчасМск()}">`,
+    async () => { const r = await rpc('data_vydachi', { p_token: ТОК, p_zayavka: +b.dataset.dv, p_at: atИз($('wAt').value) });
+      if (!r || !r.ok) return (r && r.error) || 'Ошибка'; в_группу(); тост('Дата изменена'); рисЛ(); }));
+  $('lBox').querySelectorAll('[data-sn]').forEach(b => b.onclick = () => окно(`<b>Снять выдачу?</b><div class="mu">Касса вернётся, заявка снова будет ждать 👍</div>`,
+    async () => { const r = await rpc('snyat', { p_token: ТОК, p_zayavka: +b.dataset.sn }); if (!r || !r.ok) return (r && r.error) || 'Ошибка'; в_группу(); рисЛ(); }));
+  $('lBox').querySelectorAll('[data-ot]').forEach(b => b.onclick = () => окно(`<b>Отменить запись №${b.dataset.ot}?</b><div class="mu">Оба контура откатятся, в группу уйдёт ❌</div>`,
+    async () => { const r = await rpc('otmena', { p_token: ТОК, p_id: +b.dataset.ot }); if (!r || !r.ok) return (r && r.error) || 'Ошибка'; в_группу(); тост('Отменена'); рисЛ(); }));
+}
+
+старт();
+</script>
+</body></html>
