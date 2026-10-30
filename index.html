@@ -62,7 +62,7 @@ input:focus{outline:none;border-color:var(--acc)}
 .pill{white-space:nowrap;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700;background:rgba(54,208,125,.15);color:var(--ok)}
 .pill.b{background:rgba(255,107,107,.15);color:var(--bad)}.pill.c{background:rgba(120,150,255,.16);color:#8fa8ff;cursor:pointer}
 .gl{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:2px solid var(--m);border-radius:6px;margin-right:8px;vertical-align:-4px;cursor:pointer;font-size:13px;font-weight:900;color:#fff}
-.gl.on{background:var(--ok);border-color:var(--ok)}
+.gl.on{background:var(--ok);border-color:var(--ok)}.it.sv{border-color:rgba(54,208,125,.35)}
 .dch{display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none}.dch::-webkit-scrollbar{display:none}
 .dch button{flex:0 0 auto;min-width:58px;padding:7px 8px;border-radius:12px;background:var(--c2);border:1px solid var(--l);color:var(--m);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
 .dch button b{color:var(--t);font-size:13px}.dch button.z{border-color:rgba(54,208,125,.5)}.dch button.w{border-color:var(--y)}.dch button.on{border-color:var(--b);background:rgba(74,158,255,.12)}
@@ -168,6 +168,7 @@ select.ks{background:var(--c2);color:var(--t);border:1px solid var(--l);border-r
         <div class="seg sm" id="fVal2"><button data-v="USD" class="on">В $ по курсу</button><button data-v="RUB">На ₽-счёт</button></div></div>
       <div class="two" id="fSumW"><div><label id="fSumL">Сумма</label><input id="fSum" class="big" inputmode="decimal" placeholder="0"></div>
         <div id="fKursW"><label id="fKursL">Курс ₽ за $</label><input id="fKurs" class="big" inputmode="decimal" placeholder="88,5"></div></div>
+      <div id="fXW" class="hide"><label id="fXL">Клиенту в $</label><input id="fX" inputmode="decimal" placeholder="или впиши курс выше"></div>
       <div id="fVydW" class="hide"><div class="two"><div><label id="fVydL">Выдать</label><input id="fVydS" class="big" inputmode="decimal" placeholder="считается само"></div>
         <div><label>Кому выдать</label><input id="fVydK" class="big" autocomplete="off" placeholder="имя"></div></div></div>
       <div id="fPerW" class="hide">
@@ -239,7 +240,7 @@ select.ks{background:var(--c2);color:var(--t);border:1px solid var(--l);border-r
 
 <script>
 'use strict';
-const ВЕРСИЯ = '1.7.1';
+const ВЕРСИЯ = '1.7.2';
 const SB = 'https://lyxxbonoycdsulralmfg.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHhib25veWNkc3VscmFsbWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNzcyNTAsImV4cCI6MjEwMzc1MzI1MH0.bHKwEj7z94RKlPGGFGn6vB6W3Nlu99-psz9wvFefRis';
 const $ = id => document.getElementById(id);
@@ -581,13 +582,20 @@ document.querySelectorAll('input[inputmode=decimal]').forEach(i => i.addEventLis
   }
   if (['fSum2', 'tSum', 'fVydS'].includes(i.id)) i.dataset.руками = i.value ? '1' : '';
   if (i.id === 'fKurs') i.dataset.авто = '';
+  // 1.7.2: курс ИЛИ вторая сумма — что вписал последним, то и главное
+  if (i.id === 'fKurs' && i.value) { $('fX').value = ''; if ($('fVydS').dataset.руками) { $('fVydS').value = ''; $('fVydS').dataset.руками = ''; } }
+  if ((i.id === 'fX' || i.id === 'fVydS') && i.value) $('fKurs').value = '';
+  if (i.id === 'ppK' && i.value && $('ppX')) $('ppX').value = '';
+  if (i.id === 'ppX' && i.value && $('ppK')) $('ppK').value = '';
   if (i.closest('#mPr')) правкаПересчёт(); else пересчёт();
 }));
 ['fDen', 'fVr', 'fNote'].forEach(id => $(id).addEventListener('input', () => РЕК = null));
 
 function обычная() {
   if (!ВД_РУКАМИ) ВД = дефВД();
-  const к = КАССА, руб = вал(к) === 'RUB', с = число($('fSum').value), курс = число($('fKurs').value);
+  const к = КАССА, руб = вал(к) === 'RUB', с = число($('fSum').value);
+  let курс = число($('fKurs').value);
+  $('fKurs').placeholder = '88,5';
   // переключатель валюты долга: в рублёвой кассе — ₽-счёт или $ по курсу; в долларовой — долг в $ или в ₽ по курсу
   $('fVal').classList.toggle('hide', ТИП === 0);
   const [вн1, вн2] = $('fVal').querySelectorAll('button');
@@ -600,6 +608,13 @@ function обычная() {
   $('fUslW').classList.toggle('hide', !д_('zp', 'pribyl') || ТИП === 0 || ТИП === 2 || займ);
   $('fKursL').textContent = долгР ? 'Курс сделки ₽ за $' : 'Курс ₽ за $';
   $('fKursW').classList.toggle('hide', !((руб && !займ) || долгР)); $('fSumW').className = (руб && !займ) || долгР ? 'two' : '';
+  $('fXW').classList.toggle('hide', !(((руб && !займ) || долгР) && (ТИП === 1 || ТИП === -1)));
+  $('fXL').innerHTML = (долгР ? 'Долг в ₽' : 'Клиенту в $') + ' <span class="mu">— тогда курс посчитается сам</span>';
+  const X = (руб && !займ) || долгР ? число($('fX').value) : null;
+  if (X && с && (ТИП === 1 || ТИП === -1)) {
+    курс = курсИзСумм(руб, ТИП, с, X, д_('zp', 'pribyl') ? (число($('fUsl').value) || 0) : 0);
+    if (курс) $('fKurs').placeholder = ф(курс, 4);
+  }
   if (займ) {
     const имя = $('fKto').value.trim();
     $('fSumL').textContent = (ТИП > 0 ? 'Приход' : 'Расход') + ', ₽ · рубль за рубль';
@@ -621,9 +636,9 @@ function обычная() {
     if (долгР && !курс) return { ошибка: 'Впиши курс сделки — по нему долг в ₽' };
     const усл = д_('zp', 'pribyl') ? (число($('fUsl').value) || 0) : 0;
     const чел = Math.round((usd - усл) * 100) / 100;            // приход: зачли меньше; расход: с него больше
-    const человеку = ТИП > 0 ? чел : -(Math.round((usd + усл) * 100) / 100);
+    const человеку = X && руб ? ТИП * X : ТИП > 0 ? чел : -(Math.round((usd + усл) * 100) / 100);   // 1.7.2: вписал $ — ровно столько
     if (долгР) {                                                 // доллары из кассы, долг человека — в рублях по курсу сделки
-      const рубли = Math.round(человеку * курс * 100) / 100;
+      const рубли = X ? ТИП * X : Math.round(человеку * курс * 100) / 100;
       return { stroki: [{ schet: к, summa: ТИП * с }, { schet: основа(имя), val: 'RUB', summa: рубли, kurs: курс }], pribyl: усл,
         istochnik: усл ? (усл < 0 ? 'rashod' : к === 'Касса Турция' ? 'stambul' : 'usluga') : null, tip: ТИП > 0 ? 'prihod' : 'rashod',
         итог: `= ${фз(рубли)} ₽ по ${ф(курс, 2)} · ` + послеРуб(имя, рубли) + (усл ? ` · ${усл > 0 ? 'прибыль' : 'расход'} ${фз(усл, 2)} $` : ''), пред: двеСтроки(имя, 0, рубли) };
@@ -734,6 +749,7 @@ function сегВыд() {
   $('fVyd').querySelectorAll('button').forEach(b => b.onclick = () => { ВЫД = b.dataset.o; РЕК = null; $('fVydS').value = ''; $('fVydS').dataset.руками = ''; пересчёт(); });
 }
 function выдатьВ(к, руб, с, курс) {
+  $('fXW').classList.add('hide');
   const сч = ОЖИД[ВЫД], тР = ВЫД === 'moskva', нужК = руб || тР, д = тР ? 0 : 2;
   $('fVal').classList.add('hide'); $('fKtoW').classList.add('hide'); $('fVydW').classList.remove('hide');
   $('fKursW').classList.toggle('hide', !нужК); $('fSumW').className = нужК ? 'two' : ''; $('fKursL').textContent = 'Курс ₽ за $';
@@ -741,9 +757,16 @@ function выдатьВ(к, руб, с, курс) {
   $('fUslW').classList.toggle('hide', !д_('zp', 'pribyl'));
   $('fVydL').textContent = 'Выдать в ' + ГОРОД[ВЫД] + ', ' + (тР ? '₽' : '$');
   if (!с) return { ошибка: 'Впиши, сколько приняли' };
-  if (нужК && !курс) return { ошибка: 'Впиши курс' };
-  const усл = д_('zp', 'pribyl') ? (число($('fUsl').value) || 0) : 0, usdIn = руб ? с / курс : с;
-  const авто = Math.round((usdIn - усл) * (тР ? курс : 1) * 100) / 100, руками = $('fVydS').dataset.руками;
+  const усл = д_('zp', 'pribyl') ? (число($('fUsl').value) || 0) : 0, руками = $('fVydS').dataset.руками;
+  $('fKurs').placeholder = '88,5';
+  if (нужК && !курс && руками && число($('fVydS').value)) {                 // 1.7.2: обе суммы — курс сам
+    const вв = число($('fVydS').value);
+    курс = тР ? вв / (с - усл) : с / (вв + усл); курс = курс > 0 && isFinite(курс) ? Math.round(курс * 1e6) / 1e6 : null;
+    if (курс) $('fKurs').placeholder = ф(курс, 4);
+  }
+  if (нужК && !курс) return { ошибка: 'Впиши курс или сколько выдать' };
+  const usdIn = руб ? с / курс : с;
+  const авто = Math.round((usdIn - усл) * (тР ? курс : 1) * 100) / 100;
   const в = руками ? число($('fVydS').value) : авто;
   if (!руками) $('fVydS').placeholder = ф(авто, д);
   if (!в || в <= 0) return { ошибка: 'Сколько выдать?' };
@@ -754,6 +777,13 @@ function выдатьВ(к, руб, с, курс) {
     итог: `${кИмя(к)} +${ф(с, 2)} ${ВАЛ[вал(к)]} → выдать в ${ГОРОД[ВЫД]} ${ф(в, д)} ${тР ? '₽' : '$'} · ${кому}` + (Math.abs(пр) >= 0.01 ? ` · ${пр > 0 ? 'прибыль' : 'расход'} ${фз(пр, 2)} $` : '') + ' · там — в списке «К выдаче»' };
 }
 $('fVydK').addEventListener('input', () => { РЕК = null; пересчёт(); });
+// 1.7.2 · курс из двух сумм: дал 400 000 ₽, выдали 4 520 $ → курс 88,495575 — прибыль ровно услуга, без −0,23
+// руб: X — $ клиенту, касса ₽; иначе (касса $, долг в ₽): X — рубли долга
+function курсИзСумм(руб, T, с, X, у) {
+  if (!с || !X) return null;
+  const k = руб ? с / (X + T * у) : X / Math.abs(T > 0 ? с - у : с + у);
+  return k > 0 && isFinite(k) ? Math.round(k * 1e6) / 1e6 : null;
+}
 function текущая() { return ОТДЕЛ === 'tezer' ? тезер() : обычная(); }
 function пересчёт() {
   if ($('tOtdel').classList.contains('hide')) return;
@@ -764,7 +794,7 @@ function пересчёт() {
 }
 function очистить() {
   ВЫД = '';
-  ['fKto', 'fKto2', 'fSum', 'fKurs', 'fSum2', 'fKurs2', 'fUsl', 'fNote', 'fTel', 'fVydS', 'fVydK', 'tKto', 'tUsdt', 'tPr', 'tSum', 'tKurs'].forEach(id => { $(id).value = ''; $(id).dataset.руками = ''; });
+  ['fKto', 'fKto2', 'fSum', 'fKurs', 'fSum2', 'fKurs2', 'fUsl', 'fNote', 'fTel', 'fVydS', 'fVydK', 'fX', 'tKto', 'tUsdt', 'tPr', 'tSum', 'tKurs'].forEach(id => { $(id).value = ''; $(id).dataset.руками = ''; });
   $('fKtoB').classList.add('hide'); $('fKto2B').classList.add('hide'); $('tKtoB').classList.add('hide'); сброситьДату(); ВД = 'USD'; ВД_РУКАМИ = false; ВД2 = 'USD'; ВД2_РУКАМИ = false;
 }
 $('btnPrR').onclick = () => прОкно();
@@ -831,7 +861,7 @@ function рисЛента() {
     const можноПр = x.status !== 'отменена' && (д_('mz', 'chuzhie') || (x.kto === Я.name && д_('mz', 'svoi') && осталось > 0));
     const g = МЕТКИ.galochki[x.id], цп = МЕТКИ.cepochki[x.id], зн = МЕТКИ.zanyos[x.id];
     return h + `<div class="it ${x.status === 'отменена' ? 'off' : ''} ${g ? 'sv' : ''}">
-      <div class="top"><b>${x.status !== 'отменена' && (гал || g) ? `<span class="gl ${g ? 'on' : ''}" ${гал ? `onclick="галочка(${x.id})"` : ''} title="${g ? 'сверил ' + esc(g.kto) + ' · ' + деньРус(мскДень(g.at)) : 'сверить с группой'}">${g ? '✓' : ''}</span>` : ''}${esc(заголовок(x))}</b><span class="n ${м.summa > 0 ? 'p' : 'r'}">${м.summa ? фз(м.summa, 2) + ' ' + ВАЛ[м.val] : ''}</span></div>
+      <div class="top"><b>${x.status !== 'отменена' && (гал || g) ? `<span class="gl ${g ? 'on' : ''}" ${гал ? `onclick="галочка(${x.id}, this)"` : ''} title="${g ? 'сверил ' + esc(g.kto) + ' · ' + деньРус(мскДень(g.at)) : 'сверить с группой'}">${g ? '✓' : ''}</span>` : ''}${esc(заголовок(x))}</b><span class="n ${м.summa > 0 ? 'p' : 'r'}">${м.summa ? фз(м.summa, 2) + ' ' + ВАЛ[м.val] : ''}</span></div>
       <div class="meta">${мскВремя(x.at)} · ${деталь(x, своиКассы)}${x.note && !/^Тезер|^Отдали|^Взяли/.test(x.note) ? ' · ' + esc(x.note) : ''} · ${esc(x.kto)}
         ${пр && (д_('zp', 'pribyl') || д_('ot', 'pribyl')) ? `<span class="pill">${фз(пр.summa, 2)} $</span>` : ''}${цп ? ` <span class="pill c" onclick="правка(${x.id})">🔗 №${цп}</span>` : ''}${зн ? ` <span class="pill m">⏳→ по №${зн}</span>` : ''}${x.izmenena ? ' <span class="pill m">изменена</span>' : ''}${x.status === 'отменена' ? ' <span class="pill b">отменена</span>' : ''}
         ${можноПр ? ` <span class="pr" onclick="правка(${x.id})">✎ ${!д_('mz', 'chuzhie') ? Math.floor(осталось / 60) + ':' + String(осталось % 60).padStart(2, '0') : 'править'}</span>` : ''}</div>
@@ -847,11 +877,15 @@ let МЕТКИ = { galochki: {}, cepochki: {}, zanyos: {} };
 const ГАЛ_МОЖНО = () => д_('zp', 'galochki');
 $('lNsv').checked = чт('b9_nsv', '') === '1';
 $('lNsv').onchange = () => { пш('b9_nsv', $('lNsv').checked ? '1' : null); рисЛента(); };
-async function галочка(id) {
+async function галочка(id, эл) {
+  if (эл) { эл.classList.toggle('on'); эл.textContent = эл.classList.contains('on') ? '✓' : ''; }   // сразу, без перерисовки и прыжка наверх
   const r = await rpc('galochka', { p_token: ТОК, p_id: id });
-  if (!r || !r.ok) { тост((r && r.error) || 'Не получилось', true); return; }
+  if (!r || !r.ok) { тост((r && r.error) || 'Не получилось', true); if (эл) { эл.classList.toggle('on'); эл.textContent = эл.classList.contains('on') ? '✓' : ''; } return; }
   if (r.est) МЕТКИ.galochki[id] = { kto: Я.name, at: new Date().toISOString() }; else delete МЕТКИ.galochki[id];
-  рисЛента();
+  if (!эл) return рисЛента();
+  эл.classList.toggle('on', r.est); эл.textContent = r.est ? '✓' : ''; эл.closest('.it').classList.toggle('sv', r.est);
+  const живые = ЛЕНТА.filter(x => x.status !== 'отменена'); $('lSv').innerHTML = `☑ ${живые.filter(x => МЕТКИ.galochki[x.id]).length} из ${живые.length}`;
+  if (r.est && $('lNsv').checked) { const it = эл.closest('.it'); it.style.transition = 'opacity .3s'; it.style.opacity = '0'; setTimeout(() => it.remove(), 300); }
 }
 // цепочка в окне правки (админ): связать с №… / убрать; видно общую прибыль
 function цепБлок(r) {
@@ -1000,6 +1034,7 @@ function правкаПростая(r) {
       <label>Кто</label><input id="ppKto" value="${esc(основа(ч.schet))}">
       <div class="${нужКурс ? 'two' : ''}"><div><label>Сумма, ${ВАЛ[вал(к.schet)]}</label><input id="ppS" class="big" inputmode="decimal" value="${ф(Math.abs(Number(к.summa)), 2)}"></div>
         ${нужКурс ? `<div><label>${долгР ? 'Курс сделки ₽ за $' : 'Курс ₽ за $'}</label><input id="ppK" class="big" inputmode="decimal" value="${String(+(к.kurs || ч.kurs || '')).replace('.', ',')}"></div>` : ''}</div>
+      ${нужКурс ? `<label>${долгР ? 'Долг в ₽' : 'Клиенту в $'} <span class="mu">— впиши, и курс посчитается сам</span></label><input id="ppX" inputmode="decimal" placeholder="${ф(Math.abs(Number(ч.summa)), 2)}">` : ''}
       ${усл ? `<label>Услуга, $ <span class="mu">(прибыль · с минусом — расход)</span></label><input id="ppU" inputmode="decimal" value="${пр ? String(Math.round(пр * 100) / 100).replace('.', ',') : ''}" placeholder="0">` : ''}
       <label>Комментарий</label><input id="ppNo" value="${esc(r.note || '')}">
       <label>Телефон</label><input id="ppTel" inputmode="tel" value="${esc(r.telefon || '')}" placeholder="+998 90 123 45 67">
@@ -1019,18 +1054,24 @@ function правкаПростая(r) {
   $('mPrS').innerHTML = h; цепЗаполнить(r.id);
   $('ppT').querySelectorAll('button').forEach(b => b.onclick = () => { $('ppT').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); ппПересчёт(); });
   if ($('ppKs')) $('ppKs').querySelectorAll('button').forEach(b => b.onclick = () => { ПП.к = b.dataset.n; $('ppKs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); ппПересчёт(); });
+  if ($('ppU')) $('ppU').addEventListener('input', () => $('ppU').dataset.руками = '1');
+  if ($('ppX') && $('ppK')) { $('ppX').addEventListener('input', () => { if ($('ppX').value) { $('ppK').value = '';
+      if ($('ppU') && !$('ppU').dataset.руками && Math.abs(ПП.было.пр) < 1) $('ppU').value = ''; } });   /* хвост от курса (−0,23) — убрать, если услугу не трогал */
+    $('ppK').addEventListener('input', () => { if ($('ppK').value) $('ppX').value = ''; }); }
   $('mPrS').querySelectorAll('input').forEach(i => i.addEventListener('input', ппПересчёт));
   ппПересчёт();
 }
 function ппСобрать() {
   const P = ПП, T = +($('ppT').querySelector('.on') || { dataset: { z: 1 } }).dataset.z, имя = $('ppKto').value.trim(), с = число($('ppS').value);
-  const курс = $('ppK') ? число($('ppK').value) : null, у = $('ppU') ? (число($('ppU').value) || 0) : 0;
+  let курс = $('ppK') ? число($('ppK').value) : null; const у = $('ppU') ? (число($('ppU').value) || 0) : 0, X = $('ppX') ? число($('ppX').value) : null;
+  if ($('ppK')) $('ppK').placeholder = '';
+  if (X && с) { курс = курсИзСумм(P.руб, T, с, X, у); if (курс && $('ppK')) $('ppK').placeholder = ф(курс, 4); }
   if (!имя) return { ош: 'Впиши, кто' }; if (!с) return { ош: 'Впиши сумму' };
   if (((P.руб && !P.займ) || P.долгР) && !курс) return { ош: 'Впиши курс' };
   if (P.займ) return { stroki: [{ schet: P.к, summa: T * с }, { schet: имя, val: 'RUB', summa: T * с }], к: T * с, ч: T * с, чВал: 'RUB', пр: 0 };
-  const usd = P.руб ? с / курс : с, человеку = T > 0 ? Math.round((usd - у) * 100) / 100 : -Math.round((usd + у) * 100) / 100;
+  const usd = P.руб ? с / курс : с, человеку = X && P.руб ? T * X : T > 0 ? Math.round((usd - у) * 100) / 100 : -Math.round((usd + у) * 100) / 100;
   const ист = у ? (у < 0 ? 'rashod' : P.к === 'Касса Турция' ? 'stambul' : 'usluga') : null;
-  if (P.долгР) { const рубли = Math.round(человеку * курс * 100) / 100;
+  if (P.долгР) { const рубли = X ? T * X : Math.round(человеку * курс * 100) / 100;
     return { stroki: [{ schet: P.к, summa: T * с }, { schet: имя, val: 'RUB', summa: рубли, kurs: курс }], к: T * с, ч: рубли, чВал: 'RUB', пр: у, ист }; }
   return { stroki: [{ schet: P.к, summa: T * с, kurs: P.руб ? курс : null }, { schet: имя, summa: человеку }], к: T * с, ч: человеку, чВал: 'USD', пр: у, ист };
 }
@@ -1321,62 +1362,100 @@ async function поГруппе() {
 //  1.7.1 · 📅 ПО ДНЯМ — все записи дня по всем кассам, итоги, закрытие дня
 // ============================================================
 let ДЕНЬ = мскДень(Date.now()), ДГОР = '', Д_НСВ = false, Д_ЗАП = [], Д_МЕТ = { galochki: {}, cepochki: {}, zanyos: {} }, Д_ИТ = null, Д_СП = [], Д_ТЕКСТ = '';
+let Д_РЕЖ = чт('b9_drez', 'den'), Д_ПЕР = +чт('b9_dper', '7');
+const Д_ИМ = { moskva: 'Москва', tashkent: 'Ташкент', stambul: 'Стамбул', tezer: 'Тезер' };
 async function поДням() {
-  const до = мскДень(Date.now()), от = мскДень(Date.now() - 40 * 864e5);
-  const [сп, ит, лн] = await Promise.all([rpc('dni_spisok', { p_token: ТОК, p_ot: от, p_do: до }), rpc('den', { p_token: ТОК, p_den: ДЕНЬ }),
-    rpc('lenta', { p_token: ТОК, p_ot: ДЕНЬ, p_do: ДЕНЬ, p_otmenennye: АДМИН })]);
-  Д_СП = сп && сп.ok ? сп.dni : []; Д_ИТ = ит && ит.ok ? ит : null; Д_ЗАП = лн && лн.ok ? лн.zapisi.slice().reverse() : [];
+  const до = мскДень(Date.now()), от40 = мскДень(Date.now() - 40 * 864e5);
+  const от = Д_РЕЖ === 'vse' ? (Д_ПЕР ? мскДень(Date.now() - (Д_ПЕР - 1) * 864e5) : '2000-01-01') : ДЕНЬ, по = Д_РЕЖ === 'vse' ? до : ДЕНЬ;
+  const [сп, ит, лн] = await Promise.all([rpc('dni_spisok', { p_token: ТОК, p_ot: Д_РЕЖ === 'vse' && от < от40 ? от : от40, p_do: до }),
+    Д_РЕЖ === 'den' ? rpc('den', { p_token: ТОК, p_den: ДЕНЬ }) : null,
+    rpc('lenta', { p_token: ТОК, p_ot: от, p_do: по, p_otmenennye: АДМИН })]);
+  Д_СП = сп && сп.ok ? сп.dni : []; Д_ИТ = ит && ит.ok ? ит : null;
+  Д_ЗАП = лн && лн.ok ? лн.zapisi.slice().sort((a, b) => a.at < b.at ? -1 : a.at > b.at ? 1 : a.id - b.id) : [];   // по порядку: от раннего к позднему
   const м = Д_ЗАП.length ? await rpc('metki', { p_token: ТОК, p_ids: Д_ЗАП.map(x => x.id) }) : null;
   Д_МЕТ = м && м.ok ? м : { galochki: {}, cepochki: {}, zanyos: {} };
   рисДень();
 }
 const городЗаписи = x => { const о = new Set(x.stroki.filter(s => s.vid === 'kassa').map(s => (счёт(s.schet) || {}).otdel).filter(Boolean)); if (x.otdel) о.add(x.otdel); return [...о]; };
-function рисДень() {
-  const гал = ГАЛ_МОЖНО(), ИМ = { moskva: 'Москва', tashkent: 'Ташкент', stambul: 'Стамбул', tezer: 'Тезер' };
-  const живые = Д_ЗАП.filter(x => x.status !== 'отменена'), св = живые.filter(x => Д_МЕТ.galochki[x.id]).length, з = Д_ИТ && Д_ИТ.zakryt;
+const дСтр = x => x.stroki.filter(s => s.vid === 'kassa').map(s => `${кИмя(s.schet)} ${фз(s.summa, s.val === 'RUB' ? 0 : 2)} ${ВАЛ[s.val]}${s.kurs && s.val === 'RUB' ? ' / ' + ф(s.kurs, 2) : ''}`).join(' → ');
+function дЗапись(x, н) {
+  const гал = ГАЛ_МОЖНО(), g = Д_МЕТ.galochki[x.id], пр = x.stroki.find(q => q.vid === 'pribyl'), цп = Д_МЕТ.cepochki[x.id], off = x.status === 'отменена';
+  return `<div class="it ${off ? 'off' : ''} ${g ? 'sv' : ''}" data-id="${x.id}"><div class="top"><b>${!off && (гал || g) ? `<span class="gl ${g ? 'on' : ''}" ${гал ? `onclick="дГалочка(${x.id}, this)"` : ''}>${g ? '✓' : ''}</span>` : ''}<span class="mu" style="font-weight:700">${н ? н + '. ' : ''}${мскВремя(x.at)}</span> ${esc(заголовок(x))}</b>
+      <span class="gt">${городЗаписи(x).map(o => Д_ИМ[o] || o).join(' → ')}</span></div>
+    <div class="meta" onclick="правка(${x.id})" style="cursor:pointer">${esc(дСтр(x))}${x.note && !/^Тезер|^Отдали|^Взяли|^📤|^(выдал|занёс) по/.test(x.note) ? ' · ' + esc(x.note) : ''} · ${esc(x.kto)} · №${x.id}
+      ${пр && д_('ot', 'pribyl') ? `<span class="pill ${пр.summa < 0 ? 'b' : ''}">${фз(пр.summa, 2)} $</span>` : ''}${цп ? ` <span class="pill c">🔗 №${цп}</span>` : ''}${x.izmenena ? ' <span class="pill m">изменена</span>' : ''}${off ? ' <span class="pill b">отменена</span>' : ''}</div></div>`;
+}
+function дСписок() {
   let сп = ДГОР ? Д_ЗАП.filter(x => городЗаписи(x).includes(ДГОР)) : Д_ЗАП;
   if (Д_НСВ) сп = сп.filter(x => x.status !== 'отменена' && !Д_МЕТ.galochki[x.id]);
+  return сп;
+}
+function дСчёт() {
+  const сп = ДГОР ? Д_ЗАП.filter(x => городЗаписи(x).includes(ДГОР)) : Д_ЗАП, живые = сп.filter(x => x.status !== 'отменена'), св = живые.filter(x => Д_МЕТ.galochki[x.id]).length;
+  return { св, n: живые.length };
+}
+function рисДень() {
+  const гал = ГАЛ_МОЖНО(), з = Д_РЕЖ === 'den' && Д_ИТ && Д_ИТ.zakryt, вс = Д_РЕЖ === 'vse';
+  const сп = дСписок(), { св, n } = дСчёт();
   const значок = d => d.zakryt ? (d.izmeneno ? '⚠' : '🔒') : d.n && d.sv === d.n ? '✓' : `${d.sv}/${d.n}`;
-  const стр = x => x.stroki.filter(s => s.vid === 'kassa').map(s => `${кИмя(s.schet)} ${фз(s.summa, s.val === 'RUB' ? 0 : 2)} ${ВАЛ[s.val]}${s.kurs && s.val === 'RUB' ? ' / ' + ф(s.kurs, 2) : ''}`).join(' → ');
-  Д_ТЕКСТ = `📅 ${деньРус(ДЕНЬ)}.${ДЕНЬ.slice(0, 4)}${ДГОР ? ' · ' + ИМ[ДГОР] : ''}\n` + сп.filter(x => x.status !== 'отменена').map(x => { const пр = x.stroki.find(q => q.vid === 'pribyl');
-      return `${мскВремя(x.at)} ${заголовок(x)} · ${стр(x)}${x.note && !/^📤/.test(x.note) ? ' · ' + x.note : ''}${пр && д_('ot', 'pribyl') ? ' · пр ' + фз(пр.summa, 2) : ''}`; }).join('\n')
-    + (Д_ИТ ? '\n─────────\n' + Д_ИТ.kassy.filter(k => !ДГОР || k.otdel === ДГОР).map(k => `${кИмя(k.name)}: ${фз(k.kon, k.val === 'RUB' ? 0 : 2).replace(/^\+/, '')} ${ВАЛ[k.val]}`).join('\n') : '');
-  $('oDni').innerHTML = `<div class="dch">${Д_СП.map(d => `<button class="${d.den === ДЕНЬ ? 'on' : ''} ${d.zakryt ? (d.izmeneno ? 'w' : 'z') : d.n && d.sv === d.n ? 'z' : ''}" onclick="ДЕНЬ='${d.den}';поДням()"><b>${деньРус(d.den)}</b><span>${значок(d)}</span></button>`).join('') || '<span class="mu">записей нет</span>'}</div>
-    <div class="dnav"><button onclick="деньСдвиг(-1)">‹</button><input type="date" id="dD" value="${ДЕНЬ}" max="${мскДень(Date.now())}"><button onclick="деньСдвиг(1)" ${ДЕНЬ >= мскДень(Date.now()) ? 'disabled' : ''}>›</button></div>
+  const дн = {}; Д_СП.forEach(d => дн[d.den] = d);
+  // текст для копирования
+  Д_ТЕКСТ = (вс ? `📜 Все записи${ДГОР ? ' · ' + Д_ИМ[ДГОР] : ''}\n` : `📅 ${деньРус(ДЕНЬ)}.${ДЕНЬ.slice(0, 4)}${ДГОР ? ' · ' + Д_ИМ[ДГОР] : ''}\n`);
+  let пд = '', нн = 0;
+  сп.filter(x => x.status !== 'отменена').forEach(x => { const д = мскДень(x.at); if (вс && д !== пд) { пд = д; Д_ТЕКСТ += `\n— ${деньРус(д)} —\n`; } const пр = x.stroki.find(q => q.vid === 'pribyl');
+    Д_ТЕКСТ += `${++нн}. ${мскВремя(x.at)} ${заголовок(x)} · ${дСтр(x)}${x.note && !/^📤|^(выдал|занёс) по/.test(x.note) ? ' · ' + x.note : ''}${пр && д_('ot', 'pribyl') ? ' · пр ' + фз(пр.summa, 2) : ''}\n`; });
+  if (!вс && Д_ИТ) Д_ТЕКСТ += '─────────\n' + Д_ИТ.kassy.filter(k => !ДГОР || k.otdel === ДГОР).map(k => `${кИмя(k.name)}: ${фз(k.kon, k.val === 'RUB' ? 0 : 2).replace(/^\+/, '')} ${ВАЛ[k.val]}`).join('\n');
+  // записи: в режиме «все подряд» — с заголовками дней и сквозным номером
+  let тело = '', день = '', номер = 0;
+  сп.forEach(x => {
+    const д = мскДень(x.at);
+    if (вс && д !== день) { день = д; const d = дн[д], сколько = сп.filter(y => мскДень(y.at) === д).length;
+      тело += `<div class="day"><span>${деньРус(д)}${d ? ' · ' + значок(d) : ''}</span><span style="cursor:pointer" onclick="ДЕНЬ='${д}';Д_РЕЖ='den';пш('b9_drez','den');поДням()">${сколько} · открыть ›</span></div>`; }
+    тело += дЗапись(x, x.status !== 'отменена' ? ++номер : 0);
+  });
+  $('oDni').innerHTML = `<div class="seg sm" id="dRez" style="margin-top:10px"><button data-r="den" class="${!вс ? 'on' : ''}">📅 По дню</button><button data-r="vse" class="${вс ? 'on' : ''}">📜 Все подряд</button></div>
+    ${вс ? `<div class="seg sm" id="dPer">${[[7, '7 дней'], [30, '30 дней'], [0, 'Всё']].map(([v, t]) => `<button data-p="${v}" class="${v === Д_ПЕР ? 'on' : ''}">${t}</button>`).join('')}</div>`
+      : `<div class="dch">${Д_СП.map(d => `<button class="${d.den === ДЕНЬ ? 'on' : ''} ${d.zakryt ? (d.izmeneno ? 'w' : 'z') : d.n && d.sv === d.n ? 'z' : ''}" onclick="ДЕНЬ='${d.den}';поДням()"><b>${деньРус(d.den)}</b><span>${значок(d)}</span></button>`).join('') || '<span class="mu">записей нет</span>'}</div>
+    <div class="dnav"><button onclick="деньСдвиг(-1)">‹</button><input type="date" id="dD" value="${ДЕНЬ}" max="${мскДень(Date.now())}"><button onclick="деньСдвиг(1)" ${ДЕНЬ >= мскДень(Date.now()) ? 'disabled' : ''}>›</button></div>`}
     <div class="card dz ${з ? (з.izmeneno ? 'w' : 'z') : ''}">${з
       ? `<div class="row" style="border:0;padding:2px 0"><b>🔒 День закрыт</b><span class="mu">${esc(з.kto)} · ${деньРус(мскДень(з.at))} ${мскВремя(з.at)}</span></div>${з.izmeneno ? '<div class="pred" style="margin:6px 0 0">⚠ После закрытия были изменения — смотри несверенные</div>' : ''}
          ${гал ? `<div style="text-align:right;margin-top:6px"><span class="mu" style="cursor:pointer;text-decoration:underline" onclick="деньЗакрыть(false)">открыть день</span>${з.izmeneno ? ' · <span class="mu" style="cursor:pointer;text-decoration:underline" onclick="деньЗакрыть(true)">закрыть заново</span>' : ''}</div>` : ''}`
-      : `<div class="row" style="border:0;padding:2px 0"><b>☑ Сверено ${св} из ${живые.length}</b><span class="mu">${живые.length - св ? 'осталось ' + (живые.length - св) : живые.length ? 'всё ✓' : ''}</span></div>
-         ${гал && живые.length ? `<button class="btn sec" style="margin:8px 0 0" onclick="деньЗакрыть(true)">🔒 Закрыть день${живые.length - св ? ' · отметить оставшиеся ' + (живые.length - св) : ''}</button>` : ''}`}</div>
+      : `<div class="row" style="border:0;padding:2px 0"><b id="dSv">☑ Сверено ${св} из ${n}</b><span class="mu" id="dOst">${n - св ? 'осталось ' + (n - св) : n ? 'всё ✓' : ''}</span></div>
+         ${!вс && гал && n ? `<button class="btn sec" style="margin:8px 0 0" onclick="деньЗакрыть(true)">🔒 Закрыть день${n - св ? ' · отметить оставшиеся ' + (n - св) : ''}</button>` : ''}`}</div>
     <div class="seg sm" id="dGor">${[['', 'Все'], ['moskva', 'Москва'], ['tashkent', 'Ташкент'], ['stambul', 'Стамбул'], ['tezer', 'Тезер']].map(([o, t]) => `<button data-o="${o}" class="${o === ДГОР ? 'on' : ''}">${t}</button>`).join('')}</div>
-    <div class="day"><span>Записи · ${сп.length}</span><span>${гал ? `<input type="checkbox" id="dNsv" ${Д_НСВ ? 'checked' : ''}>несверенные` : ''}</span></div>
-    ${сп.map(x => { const g = Д_МЕТ.galochki[x.id], пр = x.stroki.find(q => q.vid === 'pribyl'), цп = Д_МЕТ.cepochki[x.id], off = x.status === 'отменена';
-      return `<div class="it ${off ? 'off' : ''}"><div class="top"><b>${!off && (гал || g) ? `<span class="gl ${g ? 'on' : ''}" ${гал ? `onclick="дГалочка(${x.id})"` : ''}>${g ? '✓' : ''}</span>` : ''}<span class="mu" style="font-weight:700">${мскВремя(x.at)}</span> ${esc(заголовок(x))}</b>
-          <span class="gt">${городЗаписи(x).map(o => ИМ[o] || o).join(' → ')}</span></div>
-        <div class="meta" onclick="правка(${x.id})" style="cursor:pointer">${esc(стр(x))}${x.note && !/^Тезер|^Отдали|^Взяли/.test(x.note) ? ' · ' + esc(x.note) : ''}${x.statya ? ' · ' + esc(x.statya) : ''} · ${esc(x.kto)}
-          ${пр && д_('ot', 'pribyl') ? `<span class="pill ${пр.summa < 0 ? 'b' : ''}">${фз(пр.summa, 2)} $</span>` : ''}${цп ? ` <span class="pill c">🔗 №${цп}</span>` : ''}${x.izmenena ? ' <span class="pill m">изменена</span>' : ''}${off ? ' <span class="pill b">отменена</span>' : ''}</div></div>`; }).join('') || `<div class="note" style="text-align:center;padding:16px 0">${Д_ЗАП.length ? 'Всё сверено ✓' : 'Записей нет'}</div>`}
-    ${Д_ИТ && Д_ИТ.kassy.length ? `<div class="bl"><div class="hh"><b>Итог дня по кассам</b><span class="mu">начало → конец</span></div>
+    <div class="day"><span>Записи по порядку · ${номер}</span><span>${гал ? `<label style="display:inline;margin:0;font-size:12px"><input type="checkbox" id="dNsv" ${Д_НСВ ? 'checked' : ''}> только несверенные</label>` : ''}</span></div>
+    <div id="dSp">${тело || `<div class="note" style="text-align:center;padding:16px 0">${Д_ЗАП.length ? 'Всё сверено ✓' : 'Записей нет'}</div>`}</div>
+    ${!вс && Д_ИТ && Д_ИТ.kassy.length ? `<div class="bl"><div class="hh"><b>Итог дня по кассам</b><span class="mu">начало → конец</span></div>
       ${Д_ИТ.kassy.filter(k => !ДГОР || k.otdel === ДГОР).map(k => { const д = k.val === 'RUB' ? 0 : 2;
         return `<div class="row" style="display:block"><div style="display:flex;justify-content:space-between"><b>${esc(кИмя(k.name))}</b><b class="n">${фз(k.kon, д).replace(/^\+/, '')} ${ВАЛ[k.val]}</b></div>
           <div class="mu">было ${фз(k.nach, д).replace(/^\+/, '')} · <span class="p">+${ф(k.prihod, д)}</span> · <span class="r">−${ф(-k.rashod, д)}</span>${k.n ? ' · ' + k.n + ' зап.' : ''}</div></div>`; }).join('')}
       ${Д_ИТ.pribyl !== null && Д_ИТ.pribyl !== undefined ? `<div class="ft"><span>📈 Прибыль дня <span class="mu" style="font-weight:600">· сделки</span></span><span class="n ${Д_ИТ.pribyl >= 0 ? 'p' : 'r'}">${фз(Д_ИТ.pribyl, 2)} $</span></div>` : ''}</div>` : ''}
-    <button class="btn" onclick="копироватьТ(Д_ТЕКСТ)">📋 Копировать день</button>`;
-  $('dD').onchange = () => { if ($('dD').value) { ДЕНЬ = $('dD').value; поДням(); } };
+    <button class="btn" onclick="копироватьТ(Д_ТЕКСТ)">📋 Копировать ${вс ? 'все' : 'день'}</button>`;
+  if ($('dD')) $('dD').onchange = () => { if ($('dD').value) { ДЕНЬ = $('dD').value; поДням(); } };
+  $('dRez').querySelectorAll('button').forEach(b => b.onclick = () => { Д_РЕЖ = b.dataset.r; пш('b9_drez', Д_РЕЖ); поДням(); });
+  if ($('dPer')) $('dPer').querySelectorAll('button').forEach(b => b.onclick = () => { Д_ПЕР = +b.dataset.p; пш('b9_dper', Д_ПЕР); поДням(); });
   $('dGor').querySelectorAll('button').forEach(b => b.onclick = () => { ДГОР = b.dataset.o; рисДень(); });
   if ($('dNsv')) $('dNsv').onchange = () => { Д_НСВ = $('dNsv').checked; рисДень(); };
-  const на = $('oDni').querySelector('.dch .on'); if (на) на.scrollIntoView({ block: 'nearest', inline: 'center' });
+  const на = $('oDni').querySelector('.dch .on'); if (на) на.parentElement.scrollLeft = на.offsetLeft - 80;   // по горизонтали, страницу не двигаем
 }
 function деньСдвиг(н) { const d = new Date(ДЕНЬ + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + н); const т = d.toISOString().slice(0, 10); if (т > мскДень(Date.now())) return; ДЕНЬ = т; поДням(); }
-async function дГалочка(id) {
+// галочка — только эта строка и счётчик, страница остаётся на месте
+async function дГалочка(id, эл) {
+  const было = эл.classList.contains('on'); эл.classList.toggle('on', !было); эл.textContent = !было ? '✓' : '';
   const r = await rpc('galochka', { p_token: ТОК, p_id: id });
-  if (!r || !r.ok) { тост((r && r.error) || 'Не получилось', true); return; }
+  if (!r || !r.ok) { тост((r && r.error) || 'Не получилось', true); эл.classList.toggle('on', было); эл.textContent = было ? '✓' : ''; return; }
   if (r.est) Д_МЕТ.galochki[id] = { kto: Я.name, at: new Date().toISOString() }; else delete Д_МЕТ.galochki[id];
-  рисДень();
+  эл.classList.toggle('on', r.est); эл.textContent = r.est ? '✓' : ''; эл.closest('.it').classList.toggle('sv', r.est);
+  const { св, n } = дСчёт();
+  if ($('dSv')) $('dSv').textContent = `☑ Сверено ${св} из ${n}`;
+  if ($('dOst')) $('dOst').textContent = n - св ? 'осталось ' + (n - св) : n ? 'всё ✓' : '';
+  if (r.est && Д_НСВ) { const it = эл.closest('.it'); it.style.transition = 'opacity .3s'; it.style.opacity = '0'; setTimeout(() => it.remove(), 300); }
 }
 async function деньЗакрыть(да) {
   const r = await rpc('zakryt_den', { p_token: ТОК, p_den: ДЕНЬ, p_zakryt: да });
   if (!r || !r.ok) { тост((r && r.error) || 'Не получилось', true); return; }
-  тост(да ? 'День закрыт' + (r.galochek ? ' · +' + r.galochek + ' ✓' : '') : 'День открыт'); поДням();
+  тост(да ? 'День закрыт' + (r.galochek ? ' · +' + r.galochek + ' ✓' : '') : 'День открыт');
+  const y = window.scrollY; await поДням(); window.scrollTo(0, y);
 }
 
 // ---------- 1.7.1 · ПРИБЫЛЬ: расходы по статьям · по текущему курсу ----------
