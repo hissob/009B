@@ -170,7 +170,8 @@ select.ks{background:var(--c2);color:var(--t);border:1px solid var(--l);border-r
         <div id="fKursW"><label id="fKursL">Курс ₽ за $</label><input id="fKurs" class="big" inputmode="decimal" placeholder="88,5"></div></div>
       <div id="fXW" class="hide"><label id="fXL">Клиенту в $</label><input id="fX" inputmode="decimal" placeholder="или впиши курс выше"></div>
       <div id="fVydW" class="hide"><div class="two"><div><label id="fVydL">Выдать</label><input id="fVydS" class="big" inputmode="decimal" placeholder="считается само"></div>
-        <div><label>Кому выдать</label><input id="fVydK" class="big" autocomplete="off" placeholder="имя"></div></div></div>
+        <div><label>Кому <span class="mu">· клиент</span></label><div class="ac"><input id="fVydK" class="big" autocomplete="off" placeholder="можно пусто"><div class="ac-list" id="fVydKL"></div></div></div></div>
+        <div class="mu" id="fVydH" style="padding-top:4px">С именем — заявка и выдача в истории клиента. Без имени — обычная заявка.</div></div>
       <div id="fPerW" class="hide">
         <label>В кассу</label><div class="seg sm" id="fKuda"></div>
         <div class="two"><div><label id="fSum2L">Пришло</label><input id="fSum2" inputmode="decimal" placeholder="считается само"></div>
@@ -217,7 +218,8 @@ select.ks{background:var(--c2);color:var(--t);border:1px solid var(--l);border-r
     <div id="oDni" class="hide"></div>
     <div id="oLyudi" class="hide"><input id="oPoisk" placeholder="Поиск по имени" style="margin-top:10px"><div id="oLyudiS"></div><div id="oIst"></div></div>
     <div id="oPribyl" class="hide">
-      <div class="two eq"><div><label>С</label><input id="pOt" type="date"></div><div><label>По</label><input id="pDo" type="date"></div></div>
+      <div class="seg sm" id="pPer"><button data-p="vse">Вся</button><button data-p="mes">Месяц</button><button data-p="per">Период</button></div>
+      <div class="two eq hide" id="pDatW"><div><label>С</label><input id="pOt" type="date"></div><div><label>По</label><input id="pDo" type="date"></div></div>
       <div id="oPribylS"></div>
     </div>
   </div>
@@ -240,7 +242,7 @@ select.ks{background:var(--c2);color:var(--t);border:1px solid var(--l);border-r
 
 <script>
 'use strict';
-const ВЕРСИЯ = '1.7.2';
+const ВЕРСИЯ = '1.7.3';
 const SB = 'https://lyxxbonoycdsulralmfg.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHhib25veWNkc3VscmFsbWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNzcyNTAsImV4cCI6MjEwMzc1MzI1MH0.bHKwEj7z94RKlPGGFGn6vB6W3Nlu99-psz9wvFefRis';
 const $ = id => document.getElementById(id);
@@ -356,8 +358,9 @@ async function открыть() {
   await загрузить();
   const отделы = new Set(кассы().map(k => k.otdel));
   ОТДЕЛЫ.forEach(o => $('tabs').querySelector(`[data-t=${o}]`).classList.toggle('hide', !отделы.has(o)));
-  $('tabs').querySelector('[data-t=otchet]').classList.toggle('hide', !(д_('ot', 'balans') || д_('ot', 'lyudi') || д_('ot', 'pribyl')));
-  [['sost', 'balans'], ['gruppa', 'balans'], ['dni', 'balans'], ['lyudi', 'lyudi'], ['pribyl', 'pribyl']].forEach(([o, f]) => $('oSeg').querySelector(`[data-o=${o}]`).classList.toggle('hide', !д_('ot', f)));
+  $('tabs').querySelector('[data-t=otchet]').classList.toggle('hide', !(АДМИН || д_('ot', 'lyudi') || д_('ot', 'pribyl')));
+  // 1.7.3: Баланс, Группа, По дням — только админ; остальным — Люди и Прибыль
+  [['sost', null], ['gruppa', null], ['dni', null], ['lyudi', 'lyudi'], ['pribyl', 'pribyl']].forEach(([o, f]) => $('oSeg').querySelector(`[data-o=${o}]`).classList.toggle('hide', !(f ? д_('ot', f) : АДМИН)));
   $('tabs').querySelector('[data-t=konsol]').classList.toggle('hide', !АДМИН);
   $('lOtmW').classList.toggle('hide', !АДМИН);
   вкладка(чт('b9_tab', [...отделы][0] || 'moskva'));
@@ -420,10 +423,10 @@ async function нзСписок() {
   const v = ВАЛ[сп[0].val], д = сп[0].val === 'RUB' ? 0 : 2;
   const занести = сп.filter(x => x.ostalos > 0).reduce((a, x) => a + Number(x.ostalos), 0), выдать = сп.filter(x => x.ostalos < 0).reduce((a, x) => a - Number(x.ostalos), 0);
   box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-size:13px">${ОТДЕЛ === 'moskva' ? '⏳ Не занесено · к выдаче' : '📤 К выдаче'}</b>
-      <b class="n">${выдать ? `<span class="r">выдать ${ф(выдать, д)} ${v}</span>` : ''}${занести && выдать ? ' · ' : ''}${занести ? `<span class="p">занести ${ф(занести, д)} ${v}</span>` : ''}</b></div>
+      <b class="n">${выдать ? `<span class="r">${ОТДЕЛ === 'moskva' ? 'выдать' : 'выдайте'} ${ф(выдать, д)} ${v}</span>` : ''}${занести && выдать ? ' · ' : ''}${занести ? `<span class="p">занести ${ф(занести, д)} ${v}</span>` : ''}</b></div>
     ${сп.map(x => { const о = Number(x.ostalos), вх = о > 0;
-      return `<div class="zr"><div style="display:flex;justify-content:space-between;gap:8px"><span><b>${esc(основа(x.imya || (x.note || '').replace(/^📤\s*/, '') || '—'))}</b> <span class="mu">№${x.id} · ${деньРус(мскДень(x.at))} ${мскВремя(x.at)}${x.otdel_zapisi && x.otdel_zapisi !== x.otdel ? ' · принял ' + esc(ИЗ_ГОРОДА[x.otdel_zapisi] || x.otdel_zapisi) : ''}</span></span>
-          <b class="n ${вх ? 'p' : 'r'}">${вх ? 'занести' : 'выдать'} ${ф(Math.abs(о), д)} ${v}</b></div>
+      return `<div class="zr"><div style="display:flex;justify-content:space-between;gap:8px"><span><b>${esc(основа(x.komu || x.imya || ((x.note || '').match(/^📤\s*([^·]+)/) || [])[1]?.trim() || 'Без имени'))}</b> <span class="mu">№${x.id} · ${деньРус(мскДень(x.at))} ${мскВремя(x.at)}${x.otdel_zapisi && x.otdel_zapisi !== x.otdel ? ' · принял ' + esc(ИЗ_ГОРОДА[x.otdel_zapisi] || x.otdel_zapisi) : ''}</span></span>
+          <b class="n ${вх ? 'p' : 'r'}">${вх ? 'занести' : ОТДЕЛ === 'moskva' ? 'выдать' : 'выдайте'} ${ф(Math.abs(о), д)} ${v}</b></div>
         ${Math.abs(о - Number(x.bylo)) >= 0.005 ? `<div class="mu">из ${ф(Math.abs(Number(x.bylo)), д)} ${v} — часть уже ${вх ? 'занесли' : 'выдали'}</div>` : ''}
         <div class="ac">${(x.kassy || []).map(k => `<button data-nz="${x.id}" data-iz="${esc(x.schet)}" data-k="${esc(k)}" data-s="${Math.abs(о)}" data-v="${вх ? 1 : 0}" data-val="${x.val}">${k === 'Касса Карта' ? (вх ? 'На карту' : 'С карты') : k === 'Касса Москва' ? (вх ? 'Занёс в кассу' : 'Выдал из кассы') : (вх ? 'Занёс' : 'Выдал') + (x.kassy.length > 1 ? ' · ' + esc(кИмя(k)) : '')}</button>`).join('') || '<span class="mu">нет доступа к кассе</span>'}</div></div>`; }).join('')}`;
   box.querySelectorAll('[data-nz]').forEach(b => b.onclick = () => нзОкно(+b.dataset.nz, b.dataset.iz, b.dataset.k, +b.dataset.s, b.dataset.v === '1', b.dataset.val));
@@ -600,6 +603,7 @@ function обычная() {
   $('fVal').classList.toggle('hide', ТИП === 0);
   const [вн1, вн2] = $('fVal').querySelectorAll('button');
   вн1.textContent = руб ? 'В $ по курсу' : 'Долг в $'; вн2.textContent = руб ? 'На ₽-счёт · рубль за рубль' : 'Долг в ₽ по курсу';
+  if (!руб && ГОРОД_ВИД() && !АДМИН) { ВД = 'USD'; $('fVal').classList.add('hide'); }   // 1.7.3: рубли — не в Ташкенте
   $('fVal').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === ВД));
   сегВыд();
   if (ТИП === 1 && ВЫД) return выдатьВ(к, руб, с, курс);
@@ -770,13 +774,13 @@ function выдатьВ(к, руб, с, курс) {
   const в = руками ? число($('fVydS').value) : авто;
   if (!руками) $('fVydS').placeholder = ф(авто, д);
   if (!в || в <= 0) return { ошибка: 'Сколько выдать?' };
-  const кому = $('fVydK').value.trim(); if (!кому) return { ошибка: 'Кому выдать — впиши имя' };
+  const кому = $('fVydK').value.trim();   // 1.7.3: необязательно — с именем ведём подсчёт клиента
   const пр = Math.round((usdIn - (тР ? в / курс : в)) * 100) / 100;
   return { stroki: [{ schet: к, summa: с, kurs: руб ? курс : null }, { schet: сч, summa: -в, kurs: тР ? курс : null }], pribyl: пр,
-    istochnik: Math.abs(пр) >= 0.01 ? (пр < 0 ? 'rashod' : 'usluga') : null, tip: 'prihod', note: '📤 ' + кому,
-    итог: `${кИмя(к)} +${ф(с, 2)} ${ВАЛ[вал(к)]} → выдать в ${ГОРОД[ВЫД]} ${ф(в, д)} ${тР ? '₽' : '$'} · ${кому}` + (Math.abs(пр) >= 0.01 ? ` · ${пр > 0 ? 'прибыль' : 'расход'} ${фз(пр, 2)} $` : '') + ' · там — в списке «К выдаче»' };
+    istochnik: Math.abs(пр) >= 0.01 ? (пр < 0 ? 'rashod' : 'usluga') : null, tip: 'prihod', note: '📤 ' + (кому ? кому + ' · ' : '· ') + 'в ' + ГОРОД[ВЫД], komu: кому || null,
+    итог: `${кИмя(к)} +${ф(с, 2)} ${ВАЛ[вал(к)]} → выдать в ${ГОРОД[ВЫД]} ${ф(в, д)} ${тР ? '₽' : '$'}${кому ? ' · ' + кому + ' (в его историю)' : ' · без имени'}` + (Math.abs(пр) >= 0.01 ? ` · ${пр > 0 ? 'прибыль' : 'расход'} ${фз(пр, 2)} $` : '') + ' · там — в списке «К выдаче»' };
 }
-$('fVydK').addEventListener('input', () => { РЕК = null; пересчёт(); });
+подсказки($('fVydK'), $('fVydKL'), () => { РЕК = null; пересчёт(); });
 // 1.7.2 · курс из двух сумм: дал 400 000 ₽, выдали 4 520 $ → курс 88,495575 — прибыль ровно услуга, без −0,23
 // руб: X — $ клиенту, касса ₽; иначе (касса $, долг в ₽): X — рубли долга
 function курсИзСумм(руб, T, с, X, у) {
@@ -805,7 +809,7 @@ $('btnZap').onclick = async () => {
   const at = $('fDen').value + 'T' + ($('fVr').value || '12:00') + ':00+03:00';
   const note = [р.note, $('fNote').value.trim()].filter(Boolean).join(' · ');
   const тел = ТИП === 0 && ОТДЕЛ !== 'tezer' ? '' : телФ($('fTel').value);
-  const r = await rpc('zapis', { p_token: ТОК, p: { req: РЕК, at, note, tip: р.tip, istochnik: р.istochnik, telefon: тел || null, otdel: ОТДЕЛ, stroki: р.stroki } });
+  const r = await rpc('zapis', { p_token: ТОК, p: { req: РЕК, at, note, tip: р.tip, istochnik: р.istochnik, telefon: тел || null, otdel: ОТДЕЛ, komu: р.komu || null, stroki: р.stroki } });
   $('btnZap').textContent = 'ЗАПИСАТЬ'; $('btnZap').disabled = false;
   if (!r || !r.ok) { $('fErr').textContent = (r && r.error) || 'Не записано'; return; }
   РЕК = null; тост('Записано' + (д_('zp', 'pribyl') && Math.abs(r.pribyl) >= 0.01 ? ' · прибыль ' + фз(r.pribyl, 2) + ' $' : ''));
@@ -817,8 +821,9 @@ let ПЕР = +чт('b9_per', '7');
 $('lPer').querySelectorAll('button').forEach(b => { b.classList.toggle('on', +b.dataset.p === ПЕР); b.onclick = () => { ПЕР = +b.dataset.p; пш('b9_per', ПЕР); $('lPer').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); лента(); }; });
 $('lOtm').onchange = () => лента();
 function заголовок(x) {
-  if (x.note && /^📤/.test(x.note)) { const к = x.stroki.find(s => /^(Не занесено|К выдаче)/.test(s.schet)); const г = к ? { 'Не занесено': 'Москве', 'К выдаче Ташкент': 'Ташкенте', 'К выдаче Стамбул': 'Стамбуле' }[к.schet] : '';
-    return x.note.split(' · ')[0] + (г ? ' · выдать в ' + г : ''); }
+  if (x.note && /^📤/.test(x.note)) { const к = x.stroki.find(s => /^(Не занесено|К выдаче)/.test(s.schet)); const г = к ? { 'Не занесено': 'Москве', 'К выдаче Ташкент': 'Ташкенте', 'К выдаче Стамбул': 'Стамбуле' }[к.schet] : ((x.note.match(/· в (\S+)/) || [])[1] || '');
+    const им = x.komu || (x.note.match(/^📤\s*([^·]+)/) || [])[1]?.trim();
+    return '📤 ' + (им || 'Заявка') + (г ? ' · выдать в ' + г : ''); }
   if (x.note && /^(выдал|занёс) по №/.test(x.note)) return (x.note[0].toUpperCase() + x.note.slice(1)).split(' · ')[0];
   const люди = x.stroki.filter(s => s.vid === 'chelovek').map(s => s.schet);
   if (люди.length) return люди.join(', ');
@@ -844,26 +849,47 @@ async function лента() {
   МЕТКИ = м && м.ok ? м : { galochki: {}, cepochki: {}, zanyos: {} };
   рисЛента();
 }
+// 1.7.3 · ВИД ГОРОДА (Ташкент, Стамбул): только своя сторона записи — без рублей и Москвы.
+// Заявка из другого города в ленте не стоит — она в списке «📤 К выдаче»; после «Выдал» остаётся «✓ Выдал … $».
+const ГОРОД_ВИД = () => ОТДЕЛ === 'tashkent' || ОТДЕЛ === 'stambul';
+const имяЗаявки = x => x ? x.komu || ((x.note || '').match(/^📤\s*([^·]+)/) || [])[1]?.trim() || 'без имени' : '';
+function видГорода(x) {
+  const ож = ОЖИД[ОТДЕЛ], свои = кассыОтдела().map(k => k.name).filter(n => n !== ож);
+  const моя = x.stroki.filter(s => s.vid === 'kassa' && свои.includes(s.schet));
+  const зн = МЕТКИ.zanyos[x.id], род = зн ? ЛЕНТА.find(y => y.id === зн) : null;
+  if (!моя.length) return x.stroki.some(s => s.schet === ож) ? null : { заг: заголовок(x).replace(/ ₽/g, ''), моя };   // чужая заявка — только в «К выдаче»
+  const сум = моя.reduce((a, s) => a + Number(s.summa), 0), v = ВАЛ[моя[0].val];
+  if (зн) return { заг: (сум < 0 ? '✓ Выдал ' : '✓ Принял ') + ф(Math.abs(сум), 2) + ' ' + v + ' · ' + ((x.note || '').split(' · ')[1] || (род ? имяЗаявки(род) : 'по №' + зн)), моя, доп: 'по заявке №' + зн };
+  const куда = x.stroki.find(s => s.vid === 'kassa' && Object.values(ОЖИД).includes(s.schet) && s.schet !== ож);
+  if (куда || /^📤/.test(x.note || '')) {
+    const г = куда ? { 'Не занесено': 'Москве', 'К выдаче Ташкент': 'Ташкенте', 'К выдаче Стамбул': 'Стамбуле' }[куда.schet] : ((x.note || '').match(/· в (\S+)/) || [])[1];
+    return { заг: (сум > 0 ? 'Взял ' : 'Отдал ') + ф(Math.abs(сум), 2) + ' ' + v + ' · ' + имяЗаявки(x) + (г ? ' → выдать в ' + г : ' → к выдаче'), моя }; }
+  return { заг: заголовок(x).replace(/ ₽/g, ''), моя };
+}
 function рисЛента() {
-  const своиКассы = кассыОтдела().map(k => k.name), гал = ГАЛ_МОЖНО();
-  const живые = ЛЕНТА.filter(x => x.status !== 'отменена'), св = живые.filter(x => МЕТКИ.galochki[x.id]).length;
+  const своиКассы = кассыОтдела().map(k => k.name), гал = ГАЛ_МОЖНО(), гв = ГОРОД_ВИД();
+  const ВИД = {}; if (гв) ЛЕНТА.forEach(x => { ВИД[x.id] = видГорода(x); });
+  const ЛЕНТА_ = гв ? ЛЕНТА.filter(x => ВИД[x.id]) : ЛЕНТА;
+  const живые = ЛЕНТА_.filter(x => x.status !== 'отменена'), св = живые.filter(x => МЕТКИ.galochki[x.id]).length;
   $('lSv').classList.toggle('hide', !живые.length); $('lSv').innerHTML = `☑ ${св} из ${живые.length}`;
   $('lNsvW').classList.toggle('hide', !гал);
-  const сп = гал && $('lNsv').checked ? ЛЕНТА.filter(x => !МЕТКИ.galochki[x.id] && x.status !== 'отменена') : ЛЕНТА;
-  if (!сп.length) { $('lenta').innerHTML = `<div class="note" style="text-align:center;padding:18px 0">${ЛЕНТА.length ? 'Всё сверено ✓' : 'Записей нет'}</div>`; return; }
+  const сп = гал && $('lNsv').checked ? ЛЕНТА_.filter(x => !МЕТКИ.galochki[x.id] && x.status !== 'отменена') : ЛЕНТА_;
+  if (!сп.length) { $('lenta').innerHTML = `<div class="note" style="text-align:center;padding:18px 0">${ЛЕНТА_.length ? 'Всё сверено ✓' : 'Записей нет'}</div>`; return; }
   let день = '';
   $('lenta').innerHTML = сп.map(x => {
     const д = мскДень(x.at); let h = '';
     if (д !== день) { день = д; const сколько = сп.filter(y => мскДень(y.at) === д).length; h += `<div class="day"><span>${д === мскДень(Date.now()) ? 'Сегодня' : деньРус(д)}</span><span>${сколько}</span></div>`; }
-    const м = x.stroki.find(s => s.vid === 'kassa' && своиКассы.includes(s.schet)) || x.stroki.find(s => s.vid === 'kassa') || {};
+    const вд = гв ? ВИД[x.id] : null;
+    const м = вд ? (вд.моя.length ? { summa: вд.моя.reduce((a, s) => a + Number(s.summa), 0), val: вд.моя[0].val } : {})
+      : x.stroki.find(s => s.vid === 'kassa' && своиКассы.includes(s.schet)) || x.stroki.find(s => s.vid === 'kassa') || {};
     const пр = x.stroki.find(s => s.vid === 'pribyl');
     const осталось = Math.round(МИНУТ * 60 - (Date.now() - new Date(x.created).getTime()) / 1000);
     const можноПр = x.status !== 'отменена' && (д_('mz', 'chuzhie') || (x.kto === Я.name && д_('mz', 'svoi') && осталось > 0));
     const g = МЕТКИ.galochki[x.id], цп = МЕТКИ.cepochki[x.id], зн = МЕТКИ.zanyos[x.id];
     return h + `<div class="it ${x.status === 'отменена' ? 'off' : ''} ${g ? 'sv' : ''}">
-      <div class="top"><b>${x.status !== 'отменена' && (гал || g) ? `<span class="gl ${g ? 'on' : ''}" ${гал ? `onclick="галочка(${x.id}, this)"` : ''} title="${g ? 'сверил ' + esc(g.kto) + ' · ' + деньРус(мскДень(g.at)) : 'сверить с группой'}">${g ? '✓' : ''}</span>` : ''}${esc(заголовок(x))}</b><span class="n ${м.summa > 0 ? 'p' : 'r'}">${м.summa ? фз(м.summa, 2) + ' ' + ВАЛ[м.val] : ''}</span></div>
-      <div class="meta">${мскВремя(x.at)} · ${деталь(x, своиКассы)}${x.note && !/^Тезер|^Отдали|^Взяли/.test(x.note) ? ' · ' + esc(x.note) : ''} · ${esc(x.kto)}
-        ${пр && (д_('zp', 'pribyl') || д_('ot', 'pribyl')) ? `<span class="pill">${фз(пр.summa, 2)} $</span>` : ''}${цп ? ` <span class="pill c" onclick="правка(${x.id})">🔗 №${цп}</span>` : ''}${зн ? ` <span class="pill m">⏳→ по №${зн}</span>` : ''}${x.izmenena ? ' <span class="pill m">изменена</span>' : ''}${x.status === 'отменена' ? ' <span class="pill b">отменена</span>' : ''}
+      <div class="top"><b>${x.status !== 'отменена' && (гал || g) ? `<span class="gl ${g ? 'on' : ''}" ${гал ? `onclick="галочка(${x.id}, this)"` : ''} title="${g ? 'сверил ' + esc(g.kto) + ' · ' + деньРус(мскДень(g.at)) : 'сверить с группой'}">${g ? '✓' : ''}</span>` : ''}${esc(вд ? вд.заг : заголовок(x))}</b><span class="n ${м.summa > 0 ? 'p' : 'r'}">${м.summa ? фз(м.summa, 2) + ' ' + ВАЛ[м.val] : ''}</span></div>
+      <div class="meta">${мскВремя(x.at)} · ${вд ? вд.моя.map(s => esc(кИмя(s.schet)) + ' ' + фз(s.summa, 2) + ' ' + ВАЛ[s.val]).join(' · ') + (вд.доп ? ' · ' + вд.доп : '') : деталь(x, своиКассы)}${x.note && !/^Тезер|^Отдали|^Взяли|^📤|^(выдал|занёс) по/.test(x.note) ? ' · ' + esc(x.note) : ''} · ${esc(x.kto)}
+        ${пр && (д_('zp', 'pribyl') || д_('ot', 'pribyl')) ? `<span class="pill">${фз(пр.summa, 2)} $</span>` : ''}${цп ? ` <span class="pill c" onclick="правка(${x.id})">🔗 №${цп}</span>` : ''}${зн && !вд ? ` <span class="pill m">⏳→ по №${зн}</span>` : ''}${x.izmenena ? ' <span class="pill m">изменена</span>' : ''}${x.status === 'отменена' ? ' <span class="pill b">отменена</span>' : ''}
         ${можноПр ? ` <span class="pr" onclick="правка(${x.id})">✎ ${!д_('mz', 'chuzhie') ? Math.floor(осталось / 60) + ':' + String(осталось % 60).padStart(2, '0') : 'править'}</span>` : ''}</div>
       ${x.telefon ? `<a class="tel" href="tel:+${esc(String(x.telefon).replace(/\D/g, ''))}">📞 ${esc(x.telefon)}</a>` : ''}</div>`;
   }).join('');
@@ -1193,31 +1219,49 @@ async function отчёт() {
     const чел = x => ({ ид: x.osnova, имя: x.osnova + (двое.has(x.osnova) ? ' ⚠' : ''), метка: x.val === 'RUB' ? `<span class="cur ${x.summa > 0 ? 'zm' : 'rub'}">₽</span>` : '<span class="cur">$</span>',
       под: x.val === 'RUB' ? фз(x.summa) + ' ₽ · в $ по курсу долга ' + ф(x.kurs, 2) : x.n + ' сдел. · ' + деньРус(мскДень(x.last)),
       usd: x.usd, руб: x.val === 'RUB' ? x.summa : 0 });
-    const нам = [...r.kassy.filter(k => k.usd > 0.004).map(касса), ...r.lyudi.filter(x => x.usd < -0.004).sort((a, b) => a.usd - b.usd).map(чел)];
-    const мы = [...r.lyudi.filter(x => x.usd > 0.004).map(чел), ...r.kassy.filter(k => k.usd < -0.004).map(касса)];
-    if (пр > 0.004) мы.push({ имя: '📈 Прибыль', под: 'сделки, Тезер, услуги, курс рублей', usd: пр, руб: 0 }); else if (пр < -0.004) нам.push({ имя: '📉 Убыток', под: 'прибыль в минусе', usd: пр, руб: 0 });
+    // 1.7.3: рублёвый контур Москвы — одной строкой (касса + карта + не занесено): сколько рублей должно быть у Москвы по группе
+    const мскР = r.kassy.filter(k => k.otdel === 'moskva' && k.val === 'RUB'), прочие = r.kassy.filter(k => !мскР.includes(k));
+    const кассыОтч = [...прочие.map(касса)];
+    if (мскР.length) { const руб = мскР.reduce((a, k) => a + k.summa, 0), usd = мскР.reduce((a, k) => a + k.usd, 0);
+      кассыОтч.unshift({ ид: null, имя: '🏦 Москва · рубли', под: фз(руб).replace(/^\+/, '') + ' ₽ · касса + карта + не занесено' + (r.rubli && r.rubli.kurs ? ' · по ' + ф(r.rubli.kurs, 2) : ''), usd, руб }); }
+    const людиБР = r.lyudi.filter(x => x.osnova.toLowerCase() !== 'расход'), рсхВ = r.lyudi.filter(x => x.osnova.toLowerCase() === 'расход').reduce((a, x) => a + x.usd, 0);
+    const нам = [...кассыОтч.filter(k => k.usd > 0.004), ...людиБР.filter(x => x.usd < -0.004).sort((a, b) => a.usd - b.usd).map(чел)];
+    const мы = [...людиБР.filter(x => x.usd > 0.004).map(чел), ...кассыОтч.filter(k => k.usd < -0.004)];
+    const чп = пр + рсхВ, подП = 'сделки, курс' + (Math.abs(рсхВ) >= 0.005 ? ` ${фз(пр, 2)} · «Расход» ${фз(рсхВ, 2)}` : '');   // 1.7.3: чистая — за вычетом «Расход»
+    if (чп > 0.004) мы.push({ имя: '📈 Чистая прибыль', под: подП, usd: чп, руб: 0 }); else if (чп < -0.004) нам.push({ имя: '📉 Убыток', под: подП, usd: чп, руб: 0 });
     const сумма = a => a.reduce((t, x) => t + Math.abs(x.usd), 0);
     const рубИтог = (a, z) => { const к = a.filter(x => x.ид && x.руб * z > 0); return к.length ? `<div class="mu" style="padding:0 0 10px">из них в рублях: <b style="color:var(--t)">${ф(Math.abs(к.reduce((t, x) => t + x.руб, 0)))} ₽</b> (≈ ${ф(Math.abs(к.reduce((t, x) => t + x.usd, 0)))} $) · ${к.length} чел.</div>` : ''; };
     const стр = (x, кл) => `<div class="it2" ${x.ид ? `onclick="история('${esc(x.ид).replace(/'/g, "\\'")}')"` : ''}><div style="min-width:0"><b>${esc(x.имя)}</b>${x.метка || ''}<div class="mu">${esc(x.под)}</div></div><b class="n ${кл}">${ф(Math.abs(x.usd), 2)} $</b></div>`;
     const ок = Math.abs(r.farq) < 1;
     $('oSost').innerHTML = `<div class="hero"><div class="mu">В обороте</div><div style="font-size:30px;font-weight:800">${ф(r.balans.dolzhniki)} $</div>
-        <div class="mu">кто нам должен = кому мы должны · <b class="${ок ? 'p' : 'r'}">фарқ ${ок ? '0 ✓' : ф(r.farq, 2) + ' ⚠'}</b></div></div>
+        <div class="mu">кто нам должен = кому мы должны · <b class="${ок ? 'p' : 'r'}">фарқ ${ок ? '0 ✓' : ф(r.farq, 2) + ' ⚠'}</b></div>
+        ${мскР.length ? `<div class="row" style="border-top:1px solid var(--l);border-bottom:0;margin-top:10px;padding-top:10px"><span><b>🏦 У Москвы рублей</b><div class="mu">по группе · касса + карта + не занесено</div></span>
+          <span style="text-align:right"><b class="n" style="font-size:19px">${фз(мскР.reduce((a, k) => a + k.summa, 0)).replace(/^\+/, '')} ₽</b>
+            <div class="n" style="font-weight:800">≈ ${фз(мскР.reduce((a, k) => a + k.usd, 0), 2).replace(/^\+/, '')} $</div>
+            <div class="mu">по ${ф(мскР.reduce((a, k) => a + k.summa, 0) / (мскР.reduce((a, k) => a + k.usd, 0) || 1), 2)} · ФИФО${число(чт('b9_mtk', '')) ? ' · по ' + ф(число(чт('b9_mtk', '')), 2) + ' = ' + фз(мскР.reduce((a, k) => a + k.summa, 0) / число(чт('b9_mtk', '')), 2).replace(/^\+/, '') + ' $' : ''}</div></span></div>` : ''}</div>
       ${двое.size ? `<div class="pred" style="margin:0 0 10px">⚠ Долг и в $, и в ₽ с разными знаками: ${esc([...двое].join(', '))}. Скорее всего одна запись сделана не той кнопкой — открой историю клиента.</div>` : ''}
       <div class="bl"><div class="hh"><b>Кто нам должен</b><span class="mu">деньги у них</span></div>${нам.map(x => стр(x, 'r')).join('') || '<div class="mu" style="padding:10px 0">никто</div>'}
         <div class="ft"><span>Итого</span><span class="n r">${ф(сумма(нам), 2)} $</span></div>${рубИтог(нам, -1)}</div>
       <div class="bl"><div class="hh"><b>Кому мы должны</b><span class="mu">их деньги у нас</span></div>${мы.map(x => стр(x, 'p')).join('') || '<div class="mu" style="padding:10px 0">никому</div>'}
         <div class="ft"><span>Итого</span><span class="n p">${ф(сумма(мы), 2)} $</span></div>${рубИтог(мы, 1)}</div>
       <div class="note">Рублёвые долги в $ — по курсу их сделки; касса Москвы ₽ в $ — остаток по среднему курсу наших рублей. Касса с деньгами — в «нам должны», прибыль — в «мы должны». Итоги всегда равны; не равны — где-то запись неверна.</div>`;
-  } else рисЛюди();
+  } else { await кому_(); рисЛюди(); }
 }
 $('oPoisk').oninput = () => рисЛюди();
+let КОМУ = [];
+async function кому_() { const r = await rpc('komu_spisok', { p_token: ТОК }); КОМУ = r && r.ok ? r.spisok : []; }
+const ждётТекст = ж => { const п = {}; (ж || []).forEach(z => { const к = z.schet + '|' + z.val; п[к] = (п[к] || 0) + Math.abs(z.ostalos); });
+  return Object.entries(п).map(([к, v]) => { const [сч, val] = к.split('|'); return ф(v, val === 'RUB' ? 0 : 2) + ' ' + ВАЛ[val] + ' в ' + ({ 'Не занесено': 'Москве', 'К выдаче Ташкент': 'Ташкенте', 'К выдаче Стамбул': 'Стамбуле' }[сч] || ''); }).join(' · '); };
 function рисЛюди() {
   $('oLyudiS').classList.remove('hide'); $('oPoisk').classList.remove('hide'); $('oIst').innerHTML = '';
   const r = СВОД, q = $('oPoisk').value.trim().toLowerCase();
   const по = {}; r.lyudi.forEach(x => { const o = по[x.osnova] = по[x.osnova] || { имя: x.osnova, usd: 0, руб: 0, рубСч: 0, n: 0, last: x.last }; o.usd += x.usd; o.n += x.n; if (x.val === 'RUB') o.рубСч += x.summa; if (x.last > o.last) o.last = x.last; });
+  КОМУ.forEach(k => { const ключ = Object.keys(по).find(n => n.toLowerCase() === k.imya.toLowerCase()) || k.imya;
+    const o = по[ключ] = по[ключ] || { имя: k.imya, usd: 0, руб: 0, рубСч: 0, n: 0, last: k.last }; o.ждёт = k.zhdet; if (!r.lyudi.some(x => x.osnova === ключ)) o.n += k.n; });
+  if (!АДМИН) Object.keys(по).filter(n => n.toLowerCase() === 'расход').forEach(n => delete по[n]);   // 1.7.3: «Расход» — не клиент, он в прибыли
   const все = Object.values(по).filter(x => !q || x.имя.toLowerCase().includes(q));
-  const откр = все.filter(x => Math.abs(x.usd) >= 0.005 || Math.abs(x.рубСч) >= 0.5).sort((a, b) => a.usd - b.usd), нули = все.filter(x => !откр.includes(x)).sort((a, b) => b.last.localeCompare(a.last));
-  const стр = x => `<div class="it2" onclick="история('${esc(x.имя).replace(/'/g, "\\'")}')"><div><b>${esc(x.имя)}</b>${x.рубСч ? `<span class="cur ${x.рубСч > 0 ? 'zm' : 'rub'}">₽</span>` : ''}<div class="mu">${x.n} сдел. · последняя ${деньРус(мскДень(x.last))}</div></div>
+  const откр = все.filter(x => Math.abs(x.usd) >= 0.005 || Math.abs(x.рубСч) >= 0.5 || (x.ждёт || []).length).sort((a, b) => a.usd - b.usd), нули = все.filter(x => !откр.includes(x)).sort((a, b) => b.last.localeCompare(a.last));
+  const стр = x => `<div class="it2" onclick="история('${esc(x.имя).replace(/'/g, "\\'")}')"><div><b>${esc(x.имя)}</b>${x.рубСч ? `<span class="cur ${x.рубСч > 0 ? 'zm' : 'rub'}">₽</span>` : ''}<div class="mu">${x.n} сдел. · последняя ${деньРус(мскДень(x.last))}</div>${(x.ждёт || []).length ? `<div class="mu" style="color:var(--y)">⏳ ждёт выдачи ${esc(ждётТекст(x.ждёт))}</div>` : ''}</div>
     <div style="text-align:right"><b class="n ${x.usd > 0.004 ? 'p' : x.usd < -0.004 ? 'r' : 'mu'}">${Math.abs(x.usd) < 0.005 ? '0 ✓' : фз(x.usd, 2) + ' $'}</b>${x.рубСч ? `<div class="mu">${фз(x.рубСч)} ₽</div>` : ''}</div></div>`;
   $('oLyudiS').innerHTML = `<div class="bl"><div class="hh"><b>Открытые</b><span class="mu">${откр.length} · тап — отчёт</span></div>${откр.map(стр).join('') || '<div class="mu" style="padding:10px 0">нет</div>'}</div>
     <div class="bl"><div class="hh"><b>Рассчитаны</b><span class="mu">${нули.length} · все сделки внутри</span></div>${нули.map(стр).join('') || '<div class="mu" style="padding:10px 0">нет</div>'}</div>`;
@@ -1231,6 +1275,8 @@ async function история(имя) {
   const r = await rpc('lenta', { p_token: ТОК, p_ot: '2000-01-01', p_do: до, p_imya: имя });
   if (!r || !r.ok) return;
   const св = (СВОД.lyudi || []).filter(x => x.osnova === имя);
+  if (!КОМУ.length) await кому_();
+  const мойК = КОМУ.find(k => k.imya.toLowerCase() === имя.toLowerCase()), ждём = (мойК && мойК.zhdet) || [];
   let д = 0, р = 0, нач = 0, начР = 0; const строки = [];
   r.zapisi.slice().reverse().forEach(x => {
     const мои = x.stroki.filter(s => s.vid === 'chelovek' && основа(s.schet) === имя);
@@ -1245,9 +1291,11 @@ async function история(имя) {
   $('oIst').innerHTML = `<div class="mu" style="cursor:pointer;padding:6px 0" onclick="рисЛюди()">‹ Все люди</div><div class="hero"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:20px">${esc(имя)}</b>
       <span style="text-align:right"><b class="n ${д > 0.004 ? 'p' : д < -0.004 ? 'r' : ''}" style="font-size:20px">${Math.abs(д) < 0.005 && Math.abs(р) < 0.5 ? '0 ✓' : (Math.abs(д) >= 0.005 ? фз(д, 2) + ' $' : '')}</b>${Math.abs(р) >= 0.5 ? `<div class="n ${р > 0 ? 'p' : 'r'}">${фз(р)} ₽</div>` : ''}</span></div>
       <div class="mu">${д > 0.004 || р > 0.4 ? 'мы должны ему' : д < -0.004 || р < -0.4 ? 'он должен нам' : 'рассчитан'}</div>
+      ${ждём.length ? `<div class="pred" style="margin:8px 0 0;color:var(--y);border-color:var(--y)">⏳ Ждёт выдачи: ${esc(ждётТекст(ждём))} · на баланс не влияет</div>` : ''}
       <div class="seg sm" style="margin-top:8px"><button class="${ИСТ_ПЕР === 'mes' ? 'on' : ''}" onclick="ИСТ_ПЕР='mes';история(ИСТ_ИМЯ)">Месяц</button><button class="${ИСТ_ПЕР === 'vse' ? 'on' : ''}" onclick="ИСТ_ПЕР='vse';история(ИСТ_ИМЯ)">Всё</button></div></div>
     <div class="bl">${ИСТ_ПЕР === 'mes' ? `<div class="it2" style="cursor:default"><span class="mu">На начало ${деньРус(от)}</span><b class="n">${фз(нач, 2)} $${Math.abs(начР) >= 0.5 ? ' · ' + фз(начР) + ' ₽' : ''}</b></div>` : ''}
       ${строки.slice().reverse().map(({ x, dd, dr, д, р }) => { const кк = к(x);
+        if (!dd && !dr && x.komu) return заявкаВИстории(x, ждём);
         return `<div class="it2" onclick="правка(${x.id})"><div style="min-width:0"><b>${кк ? esc(кИмя(кк.schet)) + ' ' + sum(кк.summa, кк.val) : esc(x.note || '№' + x.id)}</b>${кк && кк.kurs && кк.val === 'RUB' && dd ? ` <span class="mu">по ${ф(кк.kurs, 2)}</span>` : ''}
           <div class="mu">${деньРус(мскДень(x.at))} ${мскВремя(x.at)}${x.note ? ' · ' + esc(x.note) : ''} · ✎</div></div>
           <div style="text-align:right">${dd ? `<b class="n ${dd > 0 ? 'p' : 'r'}">${фз(dd, 2)} $</b>` : ''}${dr ? `<b class="n ${dr > 0 ? 'p' : 'r'}">${фз(dr)} ₽</b>` : ''}<div class="mu">остаток ${фз(д, 2)} $${Math.abs(р) >= 0.5 ? ' · ' + фз(р) + ' ₽' : ''}</div></div></div>`; }).join('') || '<div class="mu" style="padding:10px 0">за период пусто</div>'}
@@ -1284,11 +1332,28 @@ async function история(имя) {
     };
     счёт_();
   }
-  ИСТ_ТЕКСТ = `📊 ${имя}\n` + строки.map(({ x, dd, dr, д, р }) => { const кк = к(x); return `${деньРус(мскДень(x.at))} ${кк ? кИмя(кк.schet) + ' ' + sum(кк.summa, кк.val) + (кк.kurs && кк.val === 'RUB' && dd ? ' / ' + ф(кк.kurs, 2) : '') : (x.note || '')} → ${dd ? фз(dd, 2) + ' $' : ''}${dr ? фз(dr) + ' ₽' : ''}`; }).join('\n')
+  ИСТ_ТЕКСТ = `📊 ${имя}\n` + строки.map(({ x, dd, dr, д, р }) => { const кк = к(x); if (!dd && !dr && x.komu) return деньРус(мскДень(x.at)) + ' ' + заявкаТекст(x, ждём); return `${деньРус(мскДень(x.at))} ${кк ? кИмя(кк.schet) + ' ' + sum(кк.summa, кк.val) + (кк.kurs && кк.val === 'RUB' && dd ? ' / ' + ф(кк.kurs, 2) : '') : (x.note || '')} → ${dd ? фз(dd, 2) + ' $' : ''}${dr ? фз(dr) + ' ₽' : ''}`; }).join('\n')
     + `\n─────────\nОстаток: ${фз(д, 2)} $${Math.abs(р) >= 0.5 ? ' · ' + фз(р) + ' ₽' : ''}`;
   window.scrollTo(0, 0);
 }
 let ИСТ_ТЕКСТ = '';
+// 1.7.3: строка заявки «Выдать в …» и выдачи по ней в истории клиента — баланс не меняют
+const ГДЕ_ОЖ = { 'Не занесено': 'Москве', 'К выдаче Ташкент': 'Ташкенте', 'К выдаче Стамбул': 'Стамбуле' };
+function заявкаИнфо(x, ждём) {
+  const ож = x.stroki.find(s => ГДЕ_ОЖ[s.schet]), г = ож ? ГДЕ_ОЖ[ож.schet] : ((x.note || '').match(/· в (\S+)/) || [])[1] || '';
+  const v = ож ? ВАЛ[ож.val] : '$', д = ож && ож.val === 'RUB' ? 0 : 2;
+  if (x.k_zapisi) { const к = x.stroki.find(s => s.vid === 'kassa' && !ГДЕ_ОЖ[s.schet]);
+    return { заг: '✓ Выдал ' + (к ? ф(Math.abs(к.summa), к.val === 'RUB' ? 0 : 2) + ' ' + ВАЛ[к.val] : '') + (к ? ' · ' + кИмя(к.schet) : ''), под: 'по заявке №' + x.k_zapisi, кл: 'p' }; }
+  const всего = ож ? Math.abs(ож.summa) : 0, ж = ждём.find(z => z.id === x.id), ост = ж ? Math.abs(ж.ostalos) : 0;
+  return { заг: '📤 Выдать в ' + г + ' ' + ф(всего, д) + ' ' + v, под: '№' + x.id,
+    ст: !ж ? '✓ выдано' : ост < всего - 0.004 ? '⏳ выдано ' + ф(всего - ост, д) + ' из ' + ф(всего, д) : '⏳ ждёт', кл: ж ? 'y' : 'p' };
+}
+function заявкаВИстории(x, ждём) {
+  const и = заявкаИнфо(x, ждём);
+  return `<div class="it2" onclick="правка(${x.id})"><div style="min-width:0"><b>${esc(и.заг)}</b><div class="mu">${деньРус(мскДень(x.at))} ${мскВремя(x.at)} · ${esc(и.под)} · ✎</div></div>
+    <div style="text-align:right">${и.ст ? `<b class="n" style="color:var(--${и.кл === 'y' ? 'y' : 'ok'})">${esc(и.ст)}</b>` : ''}<div class="mu">баланс не меняет</div></div></div>`;
+}
+const заявкаТекст = (x, ждём) => { const и = заявкаИнфо(x, ждём); return и.заг + (и.ст ? ' · ' + и.ст : ''); };
 function списать(вал_, сальдо) {
   прОкно({ списать: true, откуда: 'chel', имя: ИСТ_ИМЯ, вал: вал_, тип: сальдо > 0 ? 1 : -1, сумма: String(Math.round(Math.abs(сальдо) * 100) / 100).replace('.', ',') });
 }
@@ -1297,13 +1362,28 @@ function копировать() {
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ИСТ_ТЕКСТ).then(() => тост('Скопировано'), запас); else запас();
 }
 ['pOt', 'pDo'].forEach(id => $(id).onchange = () => прибыль());
+const НАЧАЛО = '2026-10-01';                         // 1.7.3: «Вся прибыль» — с начала программы
+let П_ПЕР = чт('b9_pper', 'vse');
+$('pPer').querySelectorAll('button').forEach(b => b.onclick = () => { П_ПЕР = b.dataset.p; пш('b9_pper', П_ПЕР); прибыль(); });
 async function прибыль() {
-  if (!$('pOt').value) { const д = мскДень(Date.now()); $('pOt').value = д.slice(0, 8) + '01'; $('pDo').value = д; }
+  $('pPer').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.p === П_ПЕР));
+  $('pDatW').classList.toggle('hide', П_ПЕР !== 'per');
+  const сег = мскДень(Date.now());
+  if (П_ПЕР === 'vse') { $('pOt').value = НАЧАЛО; $('pDo').value = сег; }
+  else if (П_ПЕР === 'mes') { $('pOt').value = сег.slice(0, 8) + '01'; $('pDo').value = сег; }
+  else if (!$('pOt').value) { $('pOt').value = сег.slice(0, 8) + '01'; $('pDo').value = сег; }
   const r = await rpc('svod', { p_token: ТОК, p_ot: $('pOt').value, p_do: $('pDo').value }); if (!r || !r.ok || !r.pribyl) return;
-  const п = r.pribyl, мск = r.kassy.find(k => k.val === 'RUB'), курс = (мск && мск.kurs) || 0, ит = п.sdelki + п.kurs;
+  const п = r.pribyl, мск = r.kassy.find(k => k.val === 'RUB'), курс = (мск && мск.kurs) || 0, ит = П_ПЕР === 'vse' ? п.vsego : п.sdelki + п.kurs;
+  const рс = await rpc('rashod_schet', { p_token: ТОК, p_ot: $('pOt').value, p_do: $('pDo').value });
+  const рсх = рс && рс.ok ? (П_ПЕР === 'vse' ? рс.vsego : рс.za_period) : 0, чист = ит + рсх;
+  const рЗап = рс && рс.ok ? рс.zapisi : [];
   const ист = Object.entries(п.istochniki || {}).filter(([, v]) => Math.abs(v) >= 0.005).sort((a, b) => b[1] - a[1]);
   const макс = Math.max(1, ...ист.map(([, v]) => Math.abs(v)));
-  $('oPribylS').innerHTML = `<div class="card"><div class="row"><span>За период</span><span class="n p big">${ф(ит, 2)} $</span></div>${курс ? `<div class="mu">≈ ${ф(ит * курс)} ₽ по ${ф(курс, 2)}</div>` : ''}</div>
+  $('oPribylS').innerHTML = `<div class="card"><div class="row"><span>${{ vse: 'Прибыль · вся', mes: 'Прибыль · месяц', per: 'Прибыль · период' }[П_ПЕР]} <span class="mu">сделки, Тезер, услуги, курс</span></span><span class="n ${ит >= 0 ? 'p' : 'r'}">${фз(ит, 2)} $</span></div>
+      <div class="row" ${рЗап.length ? `onclick="$('pRasL').classList.toggle('hide')" style="cursor:pointer"` : ''}><span>− «Расход» <span class="mu">зарплата, аренда… · ${рЗап.length} зап.${рЗап.length ? ' ▾' : ''}</span></span><span class="n ${рсх < 0 ? 'r' : 'p'}">${фз(рсх, 2)} $</span></div>
+      <div id="pRasL" class="hide">${рЗап.slice(0, 30).map(z => `<div class="row" style="padding:5px 0 5px 12px" onclick="правка(${z.id})"><span class="mu">${деньРус(мскДень(z.at))} · ${esc(z.note || '№' + z.id)}</span><span class="n mu">${фз(z.usd, 2)}${z.val === 'RUB' ? ' · ' + фз(z.summa) + ' ₽' : ''}</span></div>`).join('')}
+        ${рЗап.length > 30 ? `<div class="mu" style="padding:6px 12px;cursor:pointer;text-decoration:underline" onclick="история('Расход')">все записи «Расход» ›</div>` : ''}</div>
+      <div class="row" style="border-bottom:0"><b>= Чистая прибыль</b><b class="n big ${чист >= 0 ? 'p' : 'r'}">${фз(чист, 2)} $</b></div>${курс ? `<div class="mu">≈ ${ф(чист * курс)} ₽ по ${ф(курс, 2)}</div>` : ''}</div>
     <div class="card"><b>Откуда</b>${ист.map(([k, v]) => `<div class="row" style="border:0;padding-bottom:2px"><span>${(ИСТ[k] || ИСТ.prochee)[0]} ${esc((ИСТ[k] || ИСТ.prochee)[1])}</span><span class="n ${v >= 0 ? 'p' : 'r'}">${фз(v, 2)} $</span></div><div class="bar"><i style="width:${Math.round(Math.abs(v) / макс * 100)}%"></i></div>`).join('') || '<div class="mu">пока нет</div>'}</div>
     <div id="oRas"></div>
     <div id="oMtm"></div>
@@ -1344,16 +1424,17 @@ async function поГруппе() {
       ${позиции.length ? `<div class="mu" style="padding:2px 0 6px">${позиции.map(x => `${esc(основа(x.imya || (x.note || '').replace(/^📤\s*/, '') || '№' + x.id))} ${x.ostalos > 0 ? 'занести' : 'выдать'} ${ф(Math.abs(x.ostalos), g.val === 'RUB' ? 0 : 2)}`).join(' · ')}</div>` : ''}
       <div class="ft"><span>${Math.abs(ож) >= 0.005 ? '<span class="mu" style="font-weight:600">по кассе ' + п(физ, g.val) + '</span> · ' : ''}📋 по группе</span><span class="n" style="font-size:17px">${п(всего, g.val)}</span></div></div>`;
   }).join('');
-  const кр = (r.lyudi || []).filter(x => x.usd > 0.004).reduce((a, x) => a + x.usd, 0), дл = (r.lyudi || []).filter(x => x.usd < -0.004).reduce((a, x) => a - x.usd, 0);
-  const пр = r.pribyl ? r.pribyl.vsego : 0, ок = Math.abs(r.farq || 0) < 1;
-  т += `Нам должны: ${ф(дл, 2)} $ · Мы должны: ${ф(кр, 2)} $\nПрибыль (ФИФО): ${фз(пр, 2)} $`;
+  const лБР = (r.lyudi || []).filter(x => x.osnova.toLowerCase() !== 'расход'), рсхГ = (r.lyudi || []).filter(x => x.osnova.toLowerCase() === 'расход').reduce((a, x) => a + x.usd, 0);
+  const кр = лБР.filter(x => x.usd > 0.004).reduce((a, x) => a + x.usd, 0), дл = лБР.filter(x => x.usd < -0.004).reduce((a, x) => a - x.usd, 0);
+  const пр = (r.pribyl ? r.pribyl.vsego : 0) + рсхГ, ок = Math.abs(r.farq || 0) < 1;
+  т += `Нам должны: ${ф(дл, 2)} $ · Мы должны: ${ф(кр, 2)} $\nЧистая прибыль: ${фз(пр, 2)} $` + (Math.abs(рсхГ) >= 0.005 ? ` (в т.ч. «Расход» ${фз(рсхГ, 2)} $)` : '');
   ГР_ТЕКСТ = т;
   $('oGr').innerHTML = `<div class="note" style="margin-top:10px">Группа — истина: сделка учтена сразу, даже если деньги ещё не занесли и не выдали. «По кассе» — что лежит физически.</div>${блоки}
     <div class="bl"><div class="hh"><b>Долги и прибыль</b><span class="mu">в $</span></div>
       <div class="row"><span>Нам должны</span><span class="n r">${ф(дл, 2)} $</span></div>
       <div class="row"><span>Мы должны</span><span class="n p">${ф(кр, 2)} $</span></div>
       ${r.rubli ? `<div class="row"><span>из них рублями <span class="mu">· нам / мы</span></span><span class="n">${ф(r.rubli.nam)} ₽ / ${ф(r.rubli.my)} ₽</span></div>` : ''}
-      <div class="row"><span>📈 Прибыль · ФИФО</span><span class="n ${пр >= 0 ? 'p' : 'r'}">${фз(пр, 2)} $</span></div>
+      <div class="row"><span>📈 Чистая прибыль <span class="mu">${Math.abs(рсхГ) >= 0.005 ? '· «Расход» ' + фз(рсхГ, 2) : ''}</span></span><span class="n ${пр >= 0 ? 'p' : 'r'}">${фз(пр, 2)} $</span></div>
       <div class="ft"><span>Сверка</span><span class="n ${ок ? 'p' : 'r'}">фарқ ${ок ? '0 ✓' : ф(r.farq, 2) + ' ⚠'}</span></div></div>
     <button class="btn" onclick="копироватьТ(ГР_ТЕКСТ)">📋 Копировать итог</button>`;
 }
