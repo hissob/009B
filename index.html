@@ -242,7 +242,7 @@ select.ks{background:var(--c2);color:var(--t);border:1px solid var(--l);border-r
 
 <script>
 'use strict';
-const ВЕРСИЯ = '1.7.3';
+const ВЕРСИЯ = '1.8';
 const SB = 'https://lyxxbonoycdsulralmfg.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHhib25veWNkc3VscmFsbWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNzcyNTAsImV4cCI6MjEwMzc1MzI1MH0.bHKwEj7z94RKlPGGFGn6vB6W3Nlu99-psz9wvFefRis';
 const $ = id => document.getElementById(id);
@@ -1237,15 +1237,22 @@ async function отчёт() {
         <div class="mu">кто нам должен = кому мы должны · <b class="${ок ? 'p' : 'r'}">фарқ ${ок ? '0 ✓' : ф(r.farq, 2) + ' ⚠'}</b></div>
         ${мскР.length ? `<div class="row" style="border-top:1px solid var(--l);border-bottom:0;margin-top:10px;padding-top:10px"><span><b>🏦 У Москвы рублей</b><div class="mu">по группе · касса + карта + не занесено</div></span>
           <span style="text-align:right"><b class="n" style="font-size:19px">${фз(мскР.reduce((a, k) => a + k.summa, 0)).replace(/^\+/, '')} ₽</b>
-            <div class="n" style="font-weight:800">≈ ${фз(мскР.reduce((a, k) => a + k.usd, 0), 2).replace(/^\+/, '')} $</div>
-            <div class="mu">по ${ф(мскР.reduce((a, k) => a + k.summa, 0) / (мскР.reduce((a, k) => a + k.usd, 0) || 1), 2)} · ФИФО${число(чт('b9_mtk', '')) ? ' · по ' + ф(число(чт('b9_mtk', '')), 2) + ' = ' + фз(мскР.reduce((a, k) => a + k.summa, 0) / число(чт('b9_mtk', '')), 2).replace(/^\+/, '') + ' $' : ''}</div></span></div>` : ''}</div>
+            <div id="mskFifo"></div></span></div>` : ''}</div>
       ${двое.size ? `<div class="pred" style="margin:0 0 10px">⚠ Долг и в $, и в ₽ с разными знаками: ${esc([...двое].join(', '))}. Скорее всего одна запись сделана не той кнопкой — открой историю клиента.</div>` : ''}
       <div class="bl"><div class="hh"><b>Кто нам должен</b><span class="mu">деньги у них</span></div>${нам.map(x => стр(x, 'r')).join('') || '<div class="mu" style="padding:10px 0">никто</div>'}
         <div class="ft"><span>Итого</span><span class="n r">${ф(сумма(нам), 2)} $</span></div>${рубИтог(нам, -1)}</div>
       <div class="bl"><div class="hh"><b>Кому мы должны</b><span class="mu">их деньги у нас</span></div>${мы.map(x => стр(x, 'p')).join('') || '<div class="mu" style="padding:10px 0">никому</div>'}
         <div class="ft"><span>Итого</span><span class="n p">${ф(сумма(мы), 2)} $</span></div>${рубИтог(мы, 1)}</div>
-      <div class="note">Рублёвые долги в $ — по курсу их сделки; касса Москвы ₽ в $ — остаток по среднему курсу наших рублей. Касса с деньгами — в «нам должны», прибыль — в «мы должны». Итоги всегда равны; не равны — где-то запись неверна.</div>`;
+      <div class="note">Рублёвые долги в $ — по курсу их сделки; касса Москвы ₽ в $ — по ФИФО (от последнего среза). Касса с деньгами — в «нам должны», прибыль — в «мы должны». Итоги всегда равны; не равны — где-то запись неверна.</div>`;
+    мскФифо();
   } else { await кому_(); рисЛюди(); }
+}
+// 1.8: рубли Москвы в $ — настоящий ФИФО от последнего среза (раньше тут стояла сумма долларов проводок)
+async function мскФифо() {
+  if (!$('mskFifo') || !д_('ot', 'pribyl')) return;
+  const r = await rpc('pribyl_po_kursu', { p_token: ТОК, p_kurs: null, p_na: null });
+  if (!r || !r.ok || !$('mskFifo')) return; const р = r.raschet;
+  $('mskFifo').innerHTML = `<div class="n" style="font-weight:800">≈ ${ф(р.book, 2)} $</div><div class="mu">по ФИФО · ср. ${ф(р.kurs_fifo, 2)}${р.srez ? ' · от среза ' + деньРус(мскДень(р.srez.na)) : ''}</div>`;
 }
 $('oPoisk').oninput = () => рисЛюди();
 let КОМУ = [];
@@ -1547,34 +1554,119 @@ async function расходыСтатьи() {
   $('oRas').innerHTML = ст.length ? `<div class="card"><b>📉 Расходы по статьям</b>${ст.map(x => `<div class="row"><span>${esc(x.statya)} <span class="mu">· ${x.n}</span></span><span class="n r">${фз(x.usd, 2)} $</span></div>`).join('')}
     <div class="row"><b>Всего расходов</b><b class="n r">${фз(ст.reduce((a, x) => a + x.usd, 0), 2)} $</b></div></div>` : '';
 }
-async function поКурсу(считать) {
+// ---------- 1.8 · СРЕЗ: курс на момент отчёта, дальше ФИФО от него ----------
+const срМомент = d => деньРус(мскДень(d)) + '.' + мскДень(d).slice(0, 4) + ' ' + мскВремя(d);
+let СР_СП = [];
+async function поКурсу() {
   if (!$('oMtm')) return;
-  const K = $('mtK') ? число($('mtK').value) : число(чт('b9_mtk', '')), на = $('mtD') ? $('mtD').value : мскДень(Date.now());
-  const r = await rpc('pribyl_po_kursu', { p_token: ТОК, p_kurs: K || null, p_na: на });
+  const K = $('mtK') ? число($('mtK').value) : число(чт('b9_mtk', ''));
+  const r = await rpc('pribyl_po_kursu', { p_token: ТОК, p_kurs: K || null, p_na: null });
   if (!r || !r.ok) { $('oMtm').innerHTML = ''; return; }
-  const р = r.raschet, мс = r.mesyacy || [], стр = (а, б, кл) => `<div class="row"><span>${а}</span><span class="n ${кл || ''}">${б}</span></div>`;
-  $('oMtm').innerHTML = `<div class="card"><b>📐 Прибыль по текущему курсу</b><div class="mu">рубли Москвы пересчитать по реальному курсу перетяжки в Ташкент — записи не меняются</div>
-    <div class="two eq" style="margin-top:6px"><div><label>Курс ₽ за $</label><input id="mtK" class="big" inputmode="decimal" placeholder="напр. 90" value="${K ? String(K).replace('.', ',') : ''}"></div>
-      <div><label>На дату</label><input id="mtD" type="date" value="${на}" max="${мскДень(Date.now())}"></div></div>
-    ${р ? `${стр('Рубли · позиция <span class="mu">касса+карта+не занесено ± долги в ₽</span>', фз(р.q).replace(/^\+/, '') + ' ₽')}
-      ${стр('Стоят по ФИФО', фз(р.book, 2).replace(/^\+/, '') + ' $' + (р.kurs_fifo ? ` <span class="mu" style="font-weight:600">· ср. ${ф(р.kurs_fifo, 2)}</span>` : ''))}
-      ${стр('По курсу ' + ф(р.kurs, 2), фз(р.po_kursu, 2).replace(/^\+/, '') + ' $')}
-      ${стр('<b>Переоценка</b>', фз(р.pereocenka, 2) + ' $', р.pereocenka >= 0 ? 'p' : 'r')}
-      ${стр('Прибыль ФИФО · всего на ' + деньРус(р.na), фз(р.fifo, 2) + ' $')}
-      <div class="row"><b>Прибыль по курсу · всего</b><b class="n ${р.itog >= 0 ? 'p' : 'r'}" style="font-size:17px">${фз(р.itog, 2)} $</b></div>
-      ${р.pred ? `<div class="mu" style="padding-top:8px">С закрытия ${деньРус(р.pred.na)}.${р.pred.na.slice(0, 4)} (по ${ф(р.pred.kurs, 2)}):</div>
-        ${стр('За месяц · ФИФО', фз(р.mes_fifo, 2) + ' $')}
-        <div class="row"><b>За месяц · по курсу</b><b class="n ${р.mes_itog >= 0 ? 'p' : 'r'}">${фз(р.mes_itog, 2)} $</b></div>` : ''}
-      ${АДМИН ? `<button class="btn sec" id="mtZ" style="margin-bottom:0">🔒 Закрыть месяц ${р.na.slice(5, 7)}.${р.na.slice(0, 4)} по ${ф(р.kurs, 2)}</button>` : ''}` : '<div class="mu" style="padding:8px 0">впиши курс</div>'}
-    ${мс.length ? `<div class="mu" style="padding:10px 0 2px;font-weight:800">Закрытые месяцы</div>` + мс.map(m => `<div class="row" style="display:block"><div style="display:flex;justify-content:space-between"><b>${m.mesyac.slice(5, 7)}.${m.mesyac.slice(0, 4)} · по ${ф(m.kurs, 2)}</b><b class="n ${(m.mes_itog ?? m.itog) >= 0 ? 'p' : 'r'}">${фз(m.mes_itog ?? m.itog, 2)} $</b></div>
-      <div class="mu">на ${деньРус(m.na)} · ФИФО ${фз(m.mes_fifo, 2)} · переоценка ${фз(m.pereocenka, 2)} · ${esc(m.kto)}</div></div>`).join('') : ''}</div>`;
-  const пере = () => { пш('b9_mtk', $('mtK').value); поКурсу(); };
-  $('mtK').onchange = пере; $('mtD').onchange = пере;
-  if ($('mtZ')) $('mtZ').onclick = async () => {
-    const z = await rpc('zakryt_mesyac', { p_token: ТОК, p_kurs: число($('mtK').value), p_na: $('mtD').value });
-    if (!z || !z.ok) { тост((z && z.error) || 'Не получилось', true); return; }
-    тост('Месяц закрыт по ' + $('mtK').value); поКурсу();
-  };
+  const р = r.raschet, сз = р.srez; СР_СП = r.srezy || [];
+  const стр = (а, б, кл) => `<div class="row"><span>${а}</span><span class="n ${кл || ''}">${б}</span></div>`;
+  $('oMtm').innerHTML = `<div class="card"><div class="row" style="border:0;padding:0 0 4px"><b>📌 ${сз ? 'С последнего среза' : 'Прибыль по ФИФО'}</b>${сз ? `<span class="pill">${срМомент(сз.na)} · ${ф(сз.kurs, 2)}</span>` : '<span class="mu">срезов ещё не было</span>'}</div>
+    ${стр('Прибыль по ФИФО' + (сз ? ' <span class="mu">· после среза</span>' : ' <span class="mu">· всего</span>'), фз(сз ? р.period_fifo : р.fifo, 2) + ' $', (сз ? р.period_fifo : р.fifo) >= 0 ? 'p' : 'r')}
+    ${стр('Рубли Москвы <div class="mu">касса + карта + не занесено ± долги в ₽</div>', ф(р.q) + ' ₽')}
+    ${стр('Стоят по ФИФО', ф(р.book, 2) + ' $ <span class="mu" style="font-weight:600">· ср. ' + ф(р.kurs_fifo || 0, 2) + '</span>')}
+    <label>Курс сейчас <span class="mu">· для подсчёта, не сохраняется</span></label><input id="mtK" class="big" inputmode="decimal" placeholder="напр. 86,3" value="${K ? String(K).replace('.', ',') : ''}">
+    ${K ? `${стр('По ' + ф(K, 2), ф(р.po_kursu, 2) + ' $')}${стр('Переоценка', фз(р.pereocenka, 2) + ' $', р.pereocenka >= 0 ? 'p' : 'r')}
+      <div class="row"><b>${сз ? 'За период по курсу' : 'Прибыль по курсу · всего'}</b><b class="n ${(сз ? р.period : р.itog) >= 0 ? 'p' : 'r'}" style="font-size:17px">${фз(сз ? р.period : р.itog, 2)} $</b></div>
+      ${сз ? стр('Всего с начала', фз(р.itog, 2) + ' $') : ''}` : ''}
+    ${АДМИН ? `<button class="btn" id="srNov">📌 Сделать срез</button>` : ''}</div>
+    <div class="card"><b>Срезы</b>${СР_СП.length ? СР_СП.map((x, i) => `<div class="row" style="display:block">
+        <div style="display:flex;justify-content:space-between;gap:8px"><b>${срМомент(x.na)} · по ${ф(x.kurs, 2)}</b><b class="n ${x.period >= 0 ? 'p' : 'r'}">${фз(x.period, 2)} $</b></div>
+        <div class="mu">за период · всего ${фз(x.itog, 2)} · ФИФО ${фз(x.fifo, 2)} · переоценка ${фз(x.pv, 2)} · ${x.zapisey} зап. · ${esc(x.kto)}</div>
+        ${x.ustarel ? `<div class="pred" style="color:var(--y)">⚠ Устарел: после среза изменена запись №${x.ustarel.id} задним числом${x.ustarel.n > 1 ? ' и ещё ' + (x.ustarel.n - 1) : ''}</div>` : ''}
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <button class="btn sec" style="margin:0;padding:8px 10px;width:auto;font-size:13px" onclick="срезExcel(${x.id})">⬇ Excel</button>
+          ${АДМИН && i === 0 && x.ustarel ? `<button class="btn sec" style="margin:0;padding:8px 10px;width:auto;font-size:13px" onclick="срезПересчитать(${x.id})">↻ Пересчитать по ${ф(x.kurs, 2)}</button>` : ''}
+          ${АДМИН && i === 0 ? `<button class="btn sec" style="margin:0;padding:8px 10px;width:auto;font-size:13px;color:var(--bad)" onclick="срезОтменить(${x.id})">Отменить</button>` : ''}</div></div>`).join('')
+      : '<div class="mu" style="padding:8px 0">Срезов пока нет. Срез фиксирует прибыль по курсу на момент отчёта; дальше прибыль считается от его курса.</div>'}
+      ${СР_СП.length > 1 ? '<div class="note">Новый срез — сверху. Отменить и пересчитать можно только последний.</div>' : ''}</div>`;
+  $('mtK').onchange = () => { пш('b9_mtk', $('mtK').value); поКурсу(); };
+  if ($('srNov')) $('srNov').onclick = () => срезОкно();
+}
+function срезОкно() {
+  const K = число(чт('b9_mtk', '')), сейчас = new Date();
+  $('mPr').classList.add('on');
+  $('mPrS').innerHTML = `<b style="font-size:16px">📌 Новый срез</b>
+    <div class="two eq"><div><label>Курс ₽ за $</label><input id="srK" class="big" inputmode="decimal" placeholder="86,3" value="${K ? String(K).replace('.', ',') : ''}"></div>
+      <div><label>На момент (Москва)</label><input id="srD" type="date" value="${мскДень(сейчас)}" max="${мскДень(сейчас)}"></div></div>
+    <div class="two eq"><div></div><div><label>Время</label><input id="srT" type="time" value="${мскВремя(сейчас)}"></div></div>
+    <div id="srChek" class="mu" style="padding:10px 0">впиши курс — покажу чек</div>
+    <button class="btn" id="srOk" disabled>✓ Сохранить срез</button><button class="btn sec" onclick="закрытьПравку()">Отмена</button>`;
+  ['srK', 'srD', 'srT'].forEach(id => $(id).addEventListener('change', срезЧек));
+  $('srK').addEventListener('input', () => { clearTimeout(срезОкно.т); срезОкно.т = setTimeout(срезЧек, 500); });
+  $('srOk').onclick = срезСохранить;
+  if (K) срезЧек();
+}
+const срНа = () => $('srD').value && $('srT').value ? new Date($('srD').value + 'T' + $('srT').value + ':59+03:00').toISOString() : null;
+async function срезЧек() {
+  const K = число($('srK').value), на = срНа(); $('srOk').disabled = true;
+  if (!K || !на) { $('srChek').innerHTML = 'впиши курс и момент'; return; }
+  $('srChek').innerHTML = 'считаю…';
+  const r = await rpc('srez_chek', { p_token: ТОК, p_kurs: K, p_na: на });
+  if (!r || !r.ok) { $('srChek').innerHTML = `<div class="err">${esc((r && r.error) || 'Ошибка')}</div>`; return; }
+  const р = r.raschet, ос = r.ostatki || [], стр = (а, б, кл) => `<div class="row"><span>${а}</span><span class="n ${кл || ''}">${б}</span></div>`;
+  const кассы = ос.filter(x => x.vid === 'kassa'), люди = ос.filter(x => x.vid === 'chelovek');
+  const нам = люди.filter(x => x.usd < 0).reduce((a, x) => a + x.usd, 0), мы = люди.filter(x => x.usd > 0).reduce((a, x) => a + x.usd, 0);
+  $('srChek').innerHTML = `<div class="mu" style="color:var(--t)">Записей до момента: <b>${r.zapisey}</b> · последняя №${r.posl_zapis || '—'}</div>
+    ${кассы.map(x => стр(esc(кИмя(x.schet)), x.val === 'RUB' ? ф(x.summa) + ' ₽' : фз(x.summa, 2) + ' ' + (x.val === 'USDT' ? 'USDT' : '$'))).join('')}
+    ${стр('Рубли Москвы ÷ ' + ф(р.kurs, 2) + ` <div class="mu">${ф(р.q)} ₽</div>`, ф(р.po_kursu, 2) + ' $')}
+    ${стр('Нам должны', ф(-нам, 2) + ' $')}${стр('Мы должны', '−' + ф(мы, 2) + ' $', 'r')}
+    <div class="card" style="background:var(--c2);margin:8px 0">
+      ${стр('Рубли стоят по ФИФО', ф(р.book, 2) + ' $ <span class="mu">· ср. ' + ф(р.kurs_fifo || 0, 2) + '</span>')}
+      ${стр('По курсу среза ' + ф(р.kurs, 2), ф(р.po_kursu, 2) + ' $')}
+      ${стр('Переоценка', фз(р.pereocenka, 2) + ' $', р.pereocenka >= 0 ? 'p' : 'r')}
+      ${р.srez ? стр('За период (с ' + срМомент(р.srez.na) + ')', фз(р.period, 2) + ' $', р.period >= 0 ? 'p' : 'r') : ''}
+      <div class="row" style="border:0"><b>Прибыль всего</b><b class="n ${р.itog >= 0 ? 'p' : 'r'}" style="font-size:18px">${фз(р.itog, 2)} $</b></div></div>
+    <div class="note">После среза все ${ф(р.q)} ₽ считаются купленными по <b>${ф(р.kurs, 2)}</b>, дальше — обычный ФИФО. Записи не меняются.</div>`;
+  $('srOk').disabled = false;
+}
+async function срезСохранить() {
+  const K = число($('srK').value), на = срНа(); if (!K || !на) return;
+  $('srOk').disabled = true;
+  const r = await rpc('srez_sdelat', { p_token: ТОК, p_kurs: K, p_na: на });
+  if (!r || !r.ok) { тост((r && r.error) || 'Не получилось', true); $('srOk').disabled = false; return; }
+  закрытьПравку(); тост('Срез сохранён · прибыль ' + фз(r.raschet.itog, 2) + ' $'); пш('b9_mtk', String(K)); if ($('mtK')) $('mtK').value = String(K).replace('.', ','); поКурсу();
+}
+async function срезОтменить(id) {
+  const x = СР_СП.find(s => s.id === id); if (!x || !confirm('Отменить срез ' + срМомент(x.na) + ' по ' + ф(x.kurs, 2) + '?')) return;
+  const r = await rpc('srez_otmenit', { p_token: ТОК, p_id: id });
+  if (!r || !r.ok) { тост((r && r.error) || 'Не получилось', true); return; }
+  тост('Срез отменён'); поКурсу();
+}
+async function срезПересчитать(id) {
+  const r = await rpc('srez_pereschitat', { p_token: ТОК, p_id: id });
+  if (!r || !r.ok) { тост((r && r.error) || 'Не получилось', true); return; }
+  тост('Пересчитан: ' + фз(r.bylo, 2) + ' → ' + фз(r.stalo, 2) + ' $'); поКурсу();
+}
+// Excel: «Срез», «Остатки», «Записи» — копия на компьютер на всякий случай
+function грузиXLSX() {
+  return window.XLSX ? Promise.resolve() : new Promise((ok, нет) => { const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload = ok; sc.onerror = нет; document.head.appendChild(sc); });
+}
+async function срезExcel(id) {
+  тост('Готовлю Excel…');
+  try { await грузиXLSX(); } catch (e) { тост('Не загрузился модуль Excel — проверь интернет', true); return; }
+  const с = await rpc('srez_snimok', { p_token: ТОК, p_id: id });
+  if (!с || !с.ok) { тост((с && с.error) || 'Не получилось', true); return; }
+  const s = с.srez, до = мскДень(s.na);
+  const л = await rpc('lenta', { p_token: ТОК, p_ot: '2000-01-01', p_do: до, p_otmenennye: false });
+  const зап = (л && л.ok ? л.zapisi : []).filter(z => z.status !== 'отменена' && z.at <= s.na).sort((a, b) => a.at < b.at ? -1 : a.at > b.at ? 1 : a.id - b.id);
+  const кн = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(кн, XLSX.utils.aoa_to_sheet([
+    ['Срез', срМомент(s.na) + ' (Москва)'], ['Курс ₽ за $', +s.kurs], ['Рубли Москвы, ₽', +s.q], ['Стоят по ФИФО, $', +(+s.book).toFixed(2)],
+    ['По курсу среза, $', +(s.q / s.kurs).toFixed(2)], ['Переоценка, $', +(+s.pv).toFixed(2)], ['Прибыль ФИФО, $', +(+s.sd + +s.rp).toFixed(2)],
+    ['Прибыль всего, $', +(+s.itog).toFixed(2)], ['За период, $', +(+s.period).toFixed(2)], ['Записей', s.zapisey], ['Сделал', s.kto], ['Когда', срМомент(s.at)]]), 'Срез');
+  XLSX.utils.book_append_sheet(кн, XLSX.utils.aoa_to_sheet([['Счёт', 'Вид', 'Валюта', 'Остаток', 'В $']].concat(
+    (с.snimok.ostatki || []).map(x => [кИмя(x.schet), { kassa: 'касса', chelovek: 'человек', pribyl: 'прибыль' }[x.vid] || x.vid, x.val, +x.summa, +x.usd]))), 'Остатки');
+  XLSX.utils.book_append_sheet(кн, XLSX.utils.aoa_to_sheet([['№', 'Дата', 'Время', 'Кто', 'Запись', 'Проводки', 'Прибыль $']].concat(
+    зап.map(z => { const пр = (z.stroki || []).find(q => q.vid === 'pribyl');
+      return [z.id, деньРус(мскДень(z.at)) + '.' + мскДень(z.at).slice(0, 4), мскВремя(z.at), z.kto, заголовок(z) + (z.note ? ' · ' + z.note : ''),
+              (z.stroki || []).map(q => кИмя(q.schet) + ' ' + фз(q.summa, q.val === 'RUB' ? 0 : 2) + (q.val === 'RUB' ? ' ₽' + (q.kurs ? ' / ' + ф(q.kurs, 2) : '') : q.val === 'USDT' ? ' USDT' : ' $')).join(' · '),
+              пр ? +(+пр.summa).toFixed(2) : '']; }))), 'Записи');
+  XLSX.writeFile(кн, 'Валюта_срез_' + до + '_' + String(s.kurs).replace('.', ',') + '.xlsx');
 }
 
 // ---------- КОНСОЛЬ ----------
