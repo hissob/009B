@@ -29,7 +29,7 @@ h1{font-size:20px;margin:0;letter-spacing:.03em}.mu{color:var(--m);font-size:12p
 .ib{background:var(--c);border:1px solid var(--l);border-radius:12px;padding:7px 11px;font-size:14px}
 .tabs{display:flex;gap:4px;margin:12px 0 10px}
 .tabs button{flex:1;min-width:0;padding:10px 0;border-radius:12px;background:var(--c);border:1px solid var(--l);color:var(--m);font-weight:800;font-size:10.5px;letter-spacing:0}
-.tabs button[data-t=konsol]{flex:.55}
+.tabs button[data-t=konsol]{flex:.55}.tabs button[data-t=mm]{font-size:11px;letter-spacing:0}
 .tabs button.on{border-color:var(--acc);color:var(--acc)}
 .card{background:var(--c);border:1px solid var(--l);border-radius:16px;padding:12px 14px;margin:10px 0}
 .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 0;border-bottom:1px solid var(--l)}.row:last-child{border:0}
@@ -147,7 +147,11 @@ select.ks{background:var(--c2);color:var(--t);border:1px solid var(--l);border-r
 .tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;white-space:nowrap}.tag.rd{background:rgba(255,107,107,.15);color:var(--bad)}.tag.yl{background:rgba(245,196,81,.15);color:var(--y)}.tag.vi{background:rgba(167,139,250,.15);color:var(--acc)}.tag.gr{background:rgba(54,208,125,.13);color:var(--ok)}
 .opt{border:1px solid var(--l);background:var(--c2);border-radius:12px;padding:9px 11px;margin-top:7px;font-size:13px;cursor:pointer}.opt.on{border-color:var(--acc);background:rgba(167,139,250,.1)}.opt b{display:block}
 .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.lbtn.on{background:var(--acc);color:#14101f;border-color:var(--acc)}.lnk{color:var(--acc);text-decoration:underline;cursor:pointer}.a{color:var(--acc)}
-.grk .top,.sigc .top,.it .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.грим{display:flex;gap:8px;align-items:center;margin-top:8px}.грим input{flex:1;padding:7px 10px;margin:0}.грим .mu{font-size:12px}
+.grk .top,.sigc .top,.it .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.ch3{display:flex;gap:6px;margin-top:6px}.ch3 span{flex:1;text-align:center;padding:9px 4px;border:1px solid var(--l);border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--c2)}.ch3 span.on{border-color:var(--acc);color:var(--acc);background:rgba(167,139,250,.1)}
+#tMm .card>.top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+#tMm .tot{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--l);margin-top:6px;padding-top:10px;font-weight:800}
+.chkg{background:var(--c2);border-radius:12px;padding:8px 11px;margin-top:8px}.chkg .row{padding:4px 0;font-size:13px}
+.грим{display:flex;gap:8px;align-items:center;margin-top:8px}.грим input{flex:1;padding:7px 10px;margin:0}.грим .mu{font-size:12px}
 .grz{font-size:12.5px;color:var(--t);padding:6px 0 0;cursor:pointer}.grz::before{content:'→ ';color:var(--acc);font-weight:800}
 .sigc{border-color:rgba(245,196,81,.55)}.sigc .it{padding:11px 0;border-top:1px solid var(--l);margin-top:10px}
 .tdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--y);margin-left:4px;vertical-align:top}
@@ -177,7 +181,7 @@ details.card summary{cursor:pointer;list-style:none}
     <div style="display:flex;gap:6px"><button class="ib" id="btnPoisk" aria-label="Поиск"></button><button class="ib" id="btnLang">🌐</button><button class="ib" id="btnRef">⟳</button><button class="ib" id="btnOut">Выйти</button></div></div>
   <div class="tabs" id="tabs">
     <button data-t="moskva">МОСКВА</button><button data-t="tashkent">ТАШКЕНТ</button><button data-t="tezer">ТЕЗЕР</button><button data-t="stambul">СТАМБУЛ</button>
-    <button data-t="otchet">ОТЧЁТ</button><button data-t="konsol">⚙</button>
+    <button data-t="mm">МОЯ МСК</button><button data-t="otchet">ОТЧЁТ</button><button data-t="konsol">⚙</button>
   </div>
 
   <!-- ОТДЕЛ: Москва / Ташкент / Регионы -->
@@ -265,6 +269,8 @@ details.card summary{cursor:pointer;list-style:none}
   </div>
 
   <!-- КОНСОЛЬ -->
+  <div id="tMm" class="hide"><div id="mmBox"></div></div>
+
   <div id="tKonsol" class="hide">
     <div class="card"><b>Люди с доступом</b><div id="aLyudi"></div></div>
     <button class="btn sec" id="aNew" style="margin-top:0">+ Новый человек</button>
@@ -282,7 +288,7 @@ details.card summary{cursor:pointer;list-style:none}
 
 <script>
 'use strict';
-const ВЕРСИЯ = '2.0.1';
+const ВЕРСИЯ = '2.1';
 const SB = 'https://lyxxbonoycdsulralmfg.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHhib25veWNkc3VscmFsbWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNzcyNTAsImV4cCI6MjEwMzc1MzI1MH0.bHKwEj7z94RKlPGGFGn6vB6W3Nlu99-psz9wvFefRis';
 const $ = id => document.getElementById(id);
@@ -424,6 +430,7 @@ async function открыть() {
   // 1.7.3: Баланс, Группа, По дням — только админ; остальным — Люди и Прибыль
   [['sost', 'balans'], ['gruppa', null], ['dni', null], ['vyg', null], ['lyudi', 'lyudi'], ['pribyl', 'pribyl']].forEach(([o, f]) => $('oSeg').querySelector(`[data-o=${o}]`).classList.toggle('hide', !(АДМИН || (f && д_('ot', f)))));   // 1.9.2: «Баланс» — по галочке, а не только админу
   $('tabs').querySelector('[data-t=konsol]').classList.toggle('hide', !АДМИН);
+  $('tabs').querySelector('[data-t=mm]').classList.toggle('hide', !(АДМИН || д_('ot', 'mm')));   // 2.1: «Моя Москва»
   $('lOtmW').classList.toggle('hide', !АДМИН);
   вкладка(чт('b9_tab', [...отделы][0] || 'moskva'));
   ПИНГ_V = null; пинг(); провЗагрузить();
@@ -439,7 +446,8 @@ function вкладка(t) {
   пш('b9_tab', t);
   $('tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   $('tOtdel').classList.toggle('hide', !ОТДЕЛЫ.includes(t));
-  $('tOtchet').classList.toggle('hide', t !== 'otchet'); $('tKonsol').classList.toggle('hide', t !== 'konsol');
+  $('tOtchet').classList.toggle('hide', t !== 'otchet'); $('tKonsol').classList.toggle('hide', t !== 'konsol'); $('tMm').classList.toggle('hide', t !== 'mm');
+  if (t === 'mm') return мояМосква();
   if (t === 'otchet') return отчёт();
   if (t === 'konsol') return консоль();
   if (ОТДЕЛ !== t) { ОТДЕЛ = t; тип(1); очистить(); }
@@ -454,7 +462,7 @@ const пишетКасса = () => АДМИН || (счёт(ОТДЕЛ === 'tezer
 function формаДоступ() { const п = пишетКасса(); $('fForm').classList.toggle('hide', !п); $('fRO').classList.toggle('hide', п); }
 function плиткиБез() { $('oKassy').querySelectorAll('.kb').forEach(b => b.classList.toggle('on', b.dataset.n === КАССА)); лента(); }
 function плитки() {
-  const сп = кассыОтдела().filter(k => !(k.name === 'Не занесено' && Math.abs(кассаСвод(k.name).summa || 0) < 0.5));   // 1.9: пустое «Не занесено» не показываем
+  const сп = кассыОтдела().filter(k => !(['Не занесено', 'Касса Карта'].includes(k.name) && Math.abs(кассаСвод(k.name).summa || 0) < 0.5));   // 2.1: Москва — один счёт; пустые «Карта» и «Не занесено» не показываем
   if (!сп.some(k => k.name === КАССА)) КАССА = (сп.find(k => k.name === чт('b9_kassa_' + ОТДЕЛ, '')) || сп[0] || {}).name;
   $('oKassy').className = 'kgrid' + (сп.length === 1 ? ' one' : сп.length === 3 ? ' three' : '');
   $('oKassy').innerHTML = сп.map(k => { const с = кассаСвод(k.name);
@@ -2014,7 +2022,7 @@ async function срезExcel(id) {
 
 // ---------- КОНСОЛЬ ----------
 let ЛЮДИ = [], КАССЫ_А = [];
-const ПУНКТЫ = [['ot', 'balans', 'Баланс · кто должен / кому должны'], ['ot', 'lyudi', 'Люди · балансы и отчёты клиентов'], ['ot', 'pribyl', 'Прибыль · сколько и откуда'],
+const ПУНКТЫ = [['ot', 'mm', 'Моя Москва · касса оператора Москвы'], ['ot', 'balans', 'Баланс · кто должен / кому должны'], ['ot', 'lyudi', 'Люди · балансы и отчёты клиентов'], ['ot', 'pribyl', 'Прибыль · сколько и откуда'],
   ['zp', 'balans', 'Баланс клиента в подсказке'], ['zp', 'pribyl', 'Прибыль записи и услуга'], ['zp', 'galochki', 'Галочки «сверено с группой»'],
   ['mz', 'svoi', 'Править свои · минуты ниже'], ['mz', 'chuzhie', 'Править и отменять чужие'], ['mz', 'zadnim', 'Задним числом больше 2 дней']];
 const ЗАГ = { ot: 'Отчёт', zp: 'В записях', mz: 'Можно' };
@@ -2027,7 +2035,7 @@ const НАБОРЫ = {
 function сводкаДоступа(e) {
   if (!e) return '';
   if (e.adm) return 'админ · всё';
-  const от = [['balans', 'баланс'], ['lyudi', 'люди'], ['pribyl', 'прибыль']].filter(([k]) => e.ot && e.ot[k]).map(x => x[1]);
+  const от = [['mm', 'моя Москва'], ['balans', 'баланс'], ['lyudi', 'люди'], ['pribyl', 'прибыль']].filter(([k]) => e.ot && e.ot[k]).map(x => x[1]);
   const пишет = Object.values(e.dk || {}).includes('w');
   return (пишет ? 'пишет' : Object.keys(e.dk || {}).length ? 'только видит' : 'касс нет') + ' · ' + (от.length ? 'отчёт: ' + от.join(', ') : 'отчёта нет')
     + (e.mz && e.mz.chuzhie ? ' · правит чужие' : '') + (e.zp && e.zp.pribyl ? ' · видит прибыль' : '');
@@ -2215,10 +2223,20 @@ const ГР = (() => {
 
   // строка записи подходит сообщению: та же валюта и сумма, касса нужного города
   const близко = (а, б) => Math.abs(Math.abs(а) - б) < 0.5;
+  // строка записи подходит сообщению: касса нужного города, та же валюта, сумма и знак.
+  // «К выдаче» и «Не занесено» — не касса города: заявка не должна сходить за выдачу.
+  const знакОк = (c, s) => !c.знак || Math.sign(s.summa) === c.знак;
+  const транзит = n => /^К выдаче|^Не занесено/i.test(n);
   function строкаПодходит(c, s) {
-    if (c.вид === 'мск' && c.спорно && /рубли/.test(c.спорно)) return близко(s.summa, c.сумма) && s.vid === 'kassa';
-    if (c.вид === 'мск') return c.вал === 'RUB' ? s.val === 'RUB' && близко(s.summa, c.сумма) : s.val !== 'RUB' && близко(s.summa, c.сумма) && (s.vid !== 'kassa' || /Москва|Турц|Стамбул|Тезер/i.test(s.schet));
-    return s.val !== 'RUB' && близко(s.summa, c.сумма);
+    if (!близко(s.summa, c.сумма)) return false;
+    if (c.вид === 'мск') {
+      if (c.спорно && /рубли/.test(c.спорно)) return s.vid === 'kassa' && !транзит(s.schet);
+      if (c.вал === 'RUB') return s.val === 'RUB' && s.vid === 'kassa' && знакОк(c, s);
+      return s.val !== 'RUB' && s.vid === 'kassa' && /Москва|Турц|Стамбул|Тезер/i.test(s.schet) && знакОк(c, s);
+    }
+    if (s.val === 'RUB') return false;
+    if (s.vid === 'kassa') return !транзит(s.schet) && !/Москва/i.test(s.schet) && знакОк(c, s);
+    return s.vid === 'chelovek' && знакОк(c, s);
   }
   const именаЗаписи = z => [z.komu, z.note, ...(z.stroki || []).filter(s => s.vid === 'chelovek').map(s => s.schet)].filter(Boolean).join(' ');
 
@@ -2235,7 +2253,7 @@ const ГР = (() => {
         const часы = Math.abs(new Date(z.at) - new Date(c.at)) / 36e5; if (часы > 24 * 20) return;
         let б = 0, им = похоже(имя2(c), именаЗаписи(z)); if (им) б += 5; if (c.тезер && /тезер/i.test(JSON.stringify(z.stroki))) б += 3;
         const род = c.reply && итог[c.reply]; if (род && род.записи.some(id => z.k_zapisi === id || (z.cepochka && поId[id] && поId[id].cepochka === z.cepochka))) б += 6;
-        if (c.знак && Math.sign(s.summa) === (s.vid === 'kassa' ? c.знак : c.знак)) б += 1;
+        if (s.vid === 'kassa') б += 1;
         б += Math.max(0, 3 - часы / 24); о.push({ z, i, б, часы, им }); }));
       return о.sort((а, б) => б.б - а.б); };
     for (let круг = 0; круг < 4; круг++) {
@@ -2265,7 +2283,7 @@ const ГР = (() => {
 
 
 // ===== 2.0 · ВЫГРУЗКА ГРУППЫ: сверка с автогалочками, запись из группы, слежение за изменёнными сообщениями =====
-let ГРС = null, ГР_СП = [], ГР_Ф = 'delo', ГР_ВАР = {}, ГР_ИМ = {}, ГР_ЗАГР = null;
+let ГРС = null, ГР_СП = [], ГР_Ф = 'delo', ГР_ВАР = {}, ГР_ИМ = {}, ГР_СУМ = {}, ГР_ВЫБР = {}, ГР_ЗАГР = null;
 const грВремя = at => деньРус(мскДень(at)) + ' ' + мскВремя(at);
 const грКлюч = имя => ГР.скелет(имя).join(' ');
 // имя из сообщения → счёт в программе: словарь, потом похожее имя среди людей, иначе новое
@@ -2303,7 +2321,7 @@ function грПредложить(c) {
   if (c.спорно) return { вручную: c.спорно };
   const и = грИмя(c), имя = и.имя, В = [];
   if (c.вид === 'мск' && c.вал === 'RUB' && c.курс) {
-    const касса = c.карта ? 'Касса Карта' : 'Касса Москва';
+    const касса = 'Касса Москва';   // 2.1: в общем учёте Москва — один счёт; карта — в «Моей Москве»
     // доллары — целые (как в группе); если это ответ на сообщение с долларами той же сделки — ровно те доллары
     const род = c.reply && ГР_СП.find(x => x.id === c.reply && (x.вид === 'тшк' || x.вид === 'стб') && x.сумма);
     let usd = Math.round(c.сумма / c.курс), подгон = '';
@@ -2323,12 +2341,14 @@ function грПредложить(c) {
       return { ясно: !и.новое, имя: и, варианты: В };
     }
     В.push({ к: 'ber', т: `Берди ₽ · ${имя}`, п: `${кИмя(касса)} −${ф(c.сумма)} ₽ по ${ф(c.курс, 2)} = ${ф(usd2, 2)} $ с его счёта` + пк, p: { tip: 'rashod', otdel: 'moskva', note: c.tekst.replace(/\n/g, ' '), stroki: [{ schet: касса, summa: -c.сумма, kurs: курс }, { schet: имя, summa: -usd2 }] } });
-    if (!c.карта) В.push({ к: 'berk', т: 'То же, но с карты', п: `Карта −${ф(c.сумма)} ₽` + пк, p: { tip: 'rashod', otdel: 'moskva', note: c.tekst.replace(/\n/g, ' '), stroki: [{ schet: 'Касса Карта', summa: -c.сумма, kurs: курс }, { schet: имя, summa: -usd2 }] } });
+    if (false) В.push({ к: 'berk', т: 'То же, но с карты', п: `Карта −${ф(c.сумма)} ₽` + пк, p: { tip: 'rashod', otdel: 'moskva', note: c.tekst.replace(/\n/g, ' '), stroki: [{ schet: 'Касса Карта', summa: -c.сумма, kurs: курс }, { schet: имя, summa: -usd2 }] } });
     return { ясно: !и.новое, имя: и, варианты: В };
   }
   if (c.вид === 'мск') {                                   // доллары в Москве: услуга процентом или суммой
     if (!имя || c.тезер || c.стамбул || c.толов || c.доп.length) return { вручную: 'долларовая сделка Москвы — запиши сам' };
-    const усл = c.услуга ? c.услуга : c.проц ? Math.round(c.сумма * c.проц) / 100 : 0, кл = c.знак > 0 ? c.сумма - усл : c.сумма + усл;
+    let усл = c.услуга ? c.услуга : c.проц ? Math.round(c.сумма * c.проц) / 100 : 0, кл = c.знак > 0 ? c.сумма - усл : c.сумма + усл;
+    const отв = ГР_СП.find(x => x.reply === c.id && x.вид === 'тшк' && x.сумма && Math.abs(x.сумма - кл) / кл < 0.02);       // Ташкент уже ответил точной суммой
+    if (отв && усл) { кл = отв.сумма; усл = Math.round(Math.abs(c.сумма - кл) * 100) / 100; }
     const подп = усл ? ` · услуга ${ф(усл, 2)} $` : '';
     if (c.знак > 0) В.push({ к: 'vyd', т: `Олдим $ → выдать в Ташкенте ${ф(кл, 2)} $`, п: 'заявка' + подп, p: { tip: 'prihod', otdel: 'moskva', istochnik: усл ? 'usluga' : null, note: '📤 ' + имя + ' · в Ташкенте', komu: имя, stroki: [{ schet: 'Касса Москва $', summa: c.сумма }, { schet: 'К выдаче Ташкент', summa: -кл }] } });
     В.push({ к: 'usd', т: `${c.знак > 0 ? 'Олдим' : 'Бердим'} $ · ${имя}`, п: `на его счёт ${c.знак > 0 ? '+' : '−'}${ф(кл, 2)} $` + подп, p: { tip: c.знак > 0 ? 'prihod' : 'rashod', otdel: 'moskva', istochnik: усл ? 'usluga' : null, note: c.tekst.replace(/\n/g, ' '), stroki: [{ schet: 'Касса Москва $', summa: c.знак * c.сумма }, { schet: имя, summa: c.знак * кл }] } });
@@ -2343,6 +2363,8 @@ function грПредложить(c) {
     if (c.проц) return { вручную: 'с процентом — запиши сам' };
     if (c.знак < 0) { const з = грЗаявка(c, имя);
       if (з) return { ясно: true, варианты: [{ к: 'vydal', т: `Выдал по заявке №${з.id} · ${ф(c.сумма, 2)} $`, п: (з.komu || имя) + ' · из кассы Ташкента', выдал: { p_id: з.id, p_iz: 'К выдаче Ташкент', p_kuda: 'Касса Ташкент', p_summa: c.сумма } }] };
+      const род = c.reply && ГР_СП.find(x => x.id === c.reply && x.вид === 'мск' && x.знак > 0 && ['ясно', 'выбрать'].includes(x.гр) && x.пред && x.пред.варианты.some(v => v.к === 'vyd'));
+      if (род) return { ясно: род.гр === 'ясно', послеЗаявки: род.id, варианты: [{ к: 'vydal0', т: `Выдал по заявке · ${ф(c.сумма, 2)} $`, п: `запишется сразу после заявки «${род.tekst.split('\n')[0].slice(0, 26)}»`, ждёт: род.id }] };
       В.push({ к: 'otd', т: `Отдал $ · ${имя}`, п: `Ташкент −${ф(c.сумма, 2)} $ с его счёта`, p: { tip: 'rashod', otdel: 'tashkent', stroki: [{ schet: 'Касса Ташкент', summa: -c.сумма }, { schet: имя, summa: -c.сумма }] } });
       return { ясно: false, имя: и, варианты: В }; }
     В.push({ к: 'vz', т: `Взял $ · ${имя}`, п: `Ташкент +${ф(c.сумма, 2)} $ на его счёт`, p: { tip: 'prihod', otdel: 'tashkent', stroki: [{ schet: 'Касса Ташкент', summa: c.сумма }, { schet: имя, summa: c.сумма }] } });
@@ -2357,6 +2379,16 @@ function грСходится(c, зз) {
   const руб = стр.filter(s => s.val === 'RUB' && s.vid === 'kassa').reduce((a, s) => a + Math.abs(s.summa), 0);
   return c.вал === 'RUB' && Math.abs(руб - c.сумма) < 0.5;
 }
+function грДругаяСумма(c, занято) {
+  const и = ГР.похоже, мск = c.вид === 'мск';
+  const подх = ГРС.zapisi.filter(z => z.status === 'живая' && !занято.has(z.id) && new Date(z.at) > new Date(ГРС.granica)
+    && Math.abs(new Date(z.at) - new Date(c.at)) < 3 * 864e5
+    && (z.stroki || []).some(s => s.vid === 'kassa' && (мск ? /Москва|Карта/.test(s.schet) : /Ташкент/.test(s.schet)) && Math.sign(s.summa) === c.знак && !близко2(s.summa, c.сумма))
+    && и(c.имя, [z.komu, z.note, ...(z.stroki || []).filter(s => s.vid === 'chelovek').map(s => s.schet)].filter(Boolean).join(' ')));
+  return подх.sort((a, b) => Math.abs(new Date(a.at) - new Date(c.at)) - Math.abs(new Date(b.at) - new Date(c.at)))[0] || null;
+}
+const близко2 = (a, b) => Math.abs(Math.abs(a) - b) < 0.5;
+const строкаГр = (c, s) => Math.abs(Math.abs(s.summa) - c.сумма) < 0.5 && s.vid !== 'pribyl';
 function грРазобрать() {
   const с = ГРС, поId = Object.fromEntries(с.zapisi.map(z => [z.id, z]));
   ГР_СП = с.soobsh.map(m => Object.assign(ГР.разбор({ id: m.id, at: m.at, ot: m.ot, text: m.tekst, reply: m.reply, izm: m.izm }), { status: m.status, udaleno: m.udaleno, tekst0: m.tekst0, zapisi: m.zapisi || [] }));
@@ -2364,17 +2396,22 @@ function грРазобрать() {
   const связи = оп.filter(c => c.status === 'svyazano').flatMap(c => c.zapisi.map(z => ({ msg: c.id, zapis: z })));
   const новые = оп.filter(c => c.status === 'novoe' && !c.udaleno);
   const гр = new Date(с.granica);
+  const занятоЗ = new Set(связи.map(l => l.zapis));
   const найд = ГР.сверка(новые, с.zapisi.filter(z => new Date(z.at) > гр || связи.some(l => l.zapis === z.id)), с.imena, связи);
+  Object.values(найд).forEach(н => н.записи.forEach(id => занятоЗ.add(id)));
   оп.forEach(c => {
     if (c.status === 'ne_zapis') return c.гр = 'нет';
     if (c.status === 'svyazano') { const зз = c.zapisi.map(id => поId[id]).filter(Boolean);
-      c.беда = c.udaleno ? 'сообщение удалено из группы' : (c.tekst0 != null && c.tekst0 !== c.tekst) ? 'сообщение изменили' : зз.some(z => z.status !== 'живая') ? 'запись отменена' : (зз.length && !грСходится(c, зз)) ? 'сумма в записи другая' : '';
+      const двойная = c.zapisi.find(id => оп.some(x => x !== c && x.status === 'svyazano' && x.zapisi.includes(id) && поId[id] && (поId[id].stroki || []).filter(s => строкаГр(x, s) || строкаГр(c, s)).length < 2));
+      c.беда = c.udaleno ? 'сообщение удалено из группы' : двойная ? `запись №${двойная} привязана ещё к одному сообщению` : (c.tekst0 != null && c.tekst0 !== c.tekst) ? 'сообщение изменили' : зз.some(z => z.status !== 'живая') ? 'запись отменена' : (зз.length && !грСходится(c, зз)) ? 'сумма в записи другая' : '';
       return c.гр = c.беда ? 'беда' : 'сверено'; }
     if (c.udaleno) return c.гр = 'нет';
     const н = найд[c.id];
-    if (н && !н.было) { c.найдено = н; return c.гр = н.уверен ? 'найдено' : 'похоже'; }
-    c.пред = грПредложить(c); c.гр = c.пред.вручную ? 'вручную' : c.пред.ясно ? 'ясно' : 'выбрать';
+    if (н && !н.было) { н.записи.forEach(id => занятоЗ.add(id)); c.найдено = н; return c.гр = н.уверен ? 'найдено' : 'похоже'; }
+    const др = c.знак && грДругаяСумма(c, занятоЗ); if (др) { c.другая = др; занятоЗ.add(др.id); return c.гр = 'другая'; }
+    c.пред = грПредложить(c); c.гр = c.пред.вручную ? 'вручную' : (c.пред.ясно || ГР_ВЫБР[c.id]) ? 'ясно' : 'выбрать';
   });
+  оп.filter(c => c.гр === 'выбрать' && c.вид === 'тшк' && c.знак < 0 && c.reply).forEach(c => { c.пред = грПредложить(c); c.гр = c.пред.вручную ? 'вручную' : c.пред.ясно ? 'ясно' : 'выбрать'; });
   ГР_СП.filter(c => c.вид === 'непонятно' && c.status === 'novoe' && !c.udaleno).forEach(c => { c.гр = 'вручную'; c.пред = { вручную: 'не понял сообщение' }; });
   const занято = new Set([...связи.map(l => l.zapis), ...Object.values(найд).flatMap(x => x.записи)]);
   ГРС.безСооб = с.zapisi.filter(z => z.status === 'живая' && new Date(z.at) > new Date(с.granica) && !занято.has(z.id) && !z.k_zapisi_авто);
@@ -2386,7 +2423,7 @@ async function выгрузка(тихо) {
 }
 function грРис() {
   const box = $('oVyg'), с = ГР_СП, n = г => с.filter(c => c.гр === г).length;
-  const дело = с.filter(c => ['беда', 'найдено', 'похоже', 'ясно', 'выбрать', 'вручную'].includes(c.гр));
+  const дело = с.filter(c => ['другая', 'беда', 'найдено', 'похоже', 'ясно', 'выбрать', 'вручную'].includes(c.гр));
   const гран = new Date(ГРС.granica).getFullYear() > 2001;
   const шапка = `<div class="card"><b>Выгрузка группы</b> <span class="mu">· Telegram на компьютере → группа → ⋮ → Экспорт истории чата → JSON</span>
       <label class="drop" for="grF">${с.length ? `в программе ${с.length} сообщ. · ${деньРус(мскДень(с[0].at))}–${деньРус(мскДень(с[с.length - 1].at))}` : 'пока ничего не загружено'}<br><b>выбрать result.json</b></label>
@@ -2394,7 +2431,7 @@ function грРис() {
       <div class="mu" style="margin-top:8px">${гран ? 'Ведём по группе с последнего среза · ' + грВремя(ГРС.granica) + '. Что было раньше — не трогаем.' : `<span class="y">Срезов нет.</span> С какого дня вести по группе? <input id="grG" type="date" style="width:auto;display:inline-block;padding:4px 8px"> <span class="lnk" onclick="грГраница()">сохранить</span>`}</div></div>`;
   const з = ГР_ЗАГР, итогЗ = !з ? '' : з.идёт ? `<div class="card hint" style="font-size:14px">⏳ Загружаю «${esc(з.файл)}» · ${з.n} сообщ…</div>`
     : з.ошибка ? `<div class="pred2">✗ Не загрузилось: ${esc(з.ошибка)}</div>`
-    : `<div class="card" style="border-color:var(--ok)"><div class="top"><b class="p">✓ Выгрузка загружена</b><span class="mu">в ${мскВремя(з.когда)}</span></div>
+    : `<div class="card" style="border-color:var(--ok)"><div class="top"><b class="p">✓ Выгрузка загружена</b><span class="mu">&nbsp;· в ${мскВремя(з.когда)}</span></div>
         <div class="mu" style="margin-top:4px">«${esc(з.файл)}» · ${з.n} сообщ. · ${грВремя(з.от)} — ${грВремя(з.до)}</div>
         <div class="kgrid four" style="margin:8px 0 0"><div class="kb"><div class="k">Новых</div><div class="v p">${з.новых}</div></div><div class="kb"><div class="k">Уже были</div><div class="v">${Math.max(0, з.было)}</div></div>
         <div class="kb ${з.изм ? 'sig' : ''}"><div class="k">Изменены</div><div class="v">${з.изм}</div></div><div class="kb ${з.уд ? 'sig' : ''}"><div class="k">Удалены</div><div class="v">${з.уд}</div></div></div>
@@ -2404,37 +2441,42 @@ function грРис() {
   const нБез = ГРС.безСооб.length;
   let тело = '';
   if (ГР_Ф === 'delo') {
-    const найд = дело.filter(c => c.гр === 'найдено'), ясн = дело.filter(c => c.гр === 'ясно'), пох = дело.filter(c => c.гр === 'похоже');
+    const найд = дело.filter(c => c.гр === 'найдено'), ясн = дело.filter(c => c.гр === 'ясно'), выб = дело.filter(c => c.гр === 'выбрать'), пох = дело.filter(c => c.гр === 'похоже');
     тело = (найд.length ? `<button class="btn" onclick="грСвязатьВсе()">✓ Отметить найденные · ${найд.length}</button>` : '') +
            (!найд.length && пох.length ? `<button class="btn sec" onclick="грСвязатьВсе('похоже')">Просмотрел — отметить и похожие · ${пох.length}</button>` : '') +
-           (ясн.length ? `<button class="btn" onclick="грЗаписатьЯсные()">Записать ясные · ${ясн.length}</button>` : '') +
+           (ясн.length ? `<button class="btn" onclick="грЗаписатьЯсные()">Записать ясные · ${ясн.length}</button>` : '') + (выб.length ? `<div class="mu" style="margin:2px 0 8px">«Выбрать» · ${выб.length}: нажми нужный вариант — сообщение станет ясным и запишется общей кнопкой</div>` : '') +
            (дело.length ? дело.map(грКарта).join('') : '<div class="card p" style="text-align:center;font-weight:800">✓ Всё сверено — группа и программа совпадают</div>');
   } else if (ГР_Ф === 'ok') тело = с.filter(c => c.гр === 'сверено').slice().reverse().map(грКарта).join('') || '<div class="mu" style="padding:12px">пусто</div>';
   else if (ГР_Ф === 'bez') тело = `<div class="mu" style="padding:4px 2px 8px">Запись есть, а сообщения в группе нет. Служебные (карта ⇄ касса, списание, расход) — это нормально: отметь «в порядке».</div>` +
-      (ГРС.безСооб.map(z => `<div class="card"><div class="top"><b>№${z.id} · ${esc(заголовок(z))}</b><span class="mu">${грВремя(z.at)}</span></div><div class="mu">${esc(z.note || '')}</div>
+      (ГРС.безСооб.map(z => `<div class="card"><div class="top"><b>№${z.id} · ${esc(заголовок(z))}</b><span class="mu">&nbsp;${грВремя(z.at)}</span></div><div class="mu">${esc(z.note || '')}</div>
         <div class="acts"><span class="lbtn" onclick="правка(${z.id})">открыть</span><span class="lbtn" onclick="грБезОк(${z.id})">в порядке</span></div></div>`).join('') || '<div class="mu" style="padding:12px">пусто</div>');
   else тело = с.filter(c => c.гр === 'нет').map(грКарта).join('') || '<div class="mu" style="padding:12px">пусто</div>';
   const люди = `<datalist id="грЛюди">${ГРС.scheta.filter(s => s.vid === 'chelovek' && s.val !== 'RUB').map(s => `<option value="${esc(s.name)}">`).join('')}</datalist>`;
   box.innerHTML = шапка + итогЗ + люди + `<div class="kgrid four">${плитка('delo', 'Разобрать', дело.length, 1)}${плитка('ok', 'Сверено', n('сверено'))}${плитка('bez', 'Нет в группе', нБез, 1)}${плитка('net', 'Не запись', n('нет'))}</div>` + тело;
   грФайл();
 }
-const ГР_МЕТКА = { беда: ['rd', ''], найдено: ['gr', 'запись найдена'], похоже: ['yl', 'похоже на запись'], ясно: ['vi', 'ясно'], выбрать: ['yl', 'выбрать'], вручную: ['yl', 'запиши сам'], сверено: ['gr', 'сверено'], нет: ['', 'не запись'] };
+const ГР_МЕТКА = { выбрано: ['gr', 'выбрано ✓'], другая: ['rd', 'сумма другая'], беда: ['rd', ''], найдено: ['gr', 'запись найдена'], похоже: ['yl', 'похоже на запись'], ясно: ['vi', 'ясно'], выбрать: ['yl', 'выбрать'], вручную: ['yl', 'запиши сам'], сверено: ['gr', 'сверено'], нет: ['', 'не запись'] };
 function грКарта(c) {
-  const м = ГР_МЕТКА[c.гр] || ['', ''], поId = id => ГРС.zapisi.find(z => z.id === id);
+  const м = (c.гр === 'ясно' && ГР_ВЫБР[c.id] && !c.пред.ясно ? ГР_МЕТКА.выбрано : ГР_МЕТКА[c.гр]) || ['', ''], поId = id => ГРС.zapisi.find(z => z.id === id);
   const род = c.reply && ГР_СП.find(x => x.id === c.reply);
   let низ = '';
   const зап = ids => ids.map(id => { const z = поId(id); return z ? `<div class="grz" onclick="правка(${id})">№${id} · ${esc(заголовок(z))} · ${грВремя(z.at)}${z.proverena ? ' <span class="p">✓</span>' : ''}</div>` : `<div class="grz">№${id}</div>`; }).join('');
   if (c.гр === 'беда') низ = `<div class="pred" style="margin:8px 0 0">⚠ ${esc(c.беда)}${c.беда === 'сообщение изменили' ? `<div class="mu">было: ${esc(c.tekst0)}</div>` : ''}</div>${зап(c.zapisi)}
       <div class="acts"><span class="lbtn" onclick="грРешить(${c.id},'prinyat')">принять как есть</span><span class="lbtn" onclick="грРешить(${c.id},'novoe')">развязать</span></div>`;
-  else if (c.гр === 'сверено') низ = зап(c.zapisi);
+  else if (c.гр === 'сверено') низ = зап(c.zapisi) + `<div class="acts"><span class="lbtn" onclick="if(confirm('Развязать сообщение и запись?'))грРешить(${c.id},'novoe')">развязать</span></div>`;
   else if (c.гр === 'найдено' || c.гр === 'похоже') низ = `${зап(c.найдено.записи)}${c.найдено.части ? '<div class="mu">внесено частями</div>' : ''}
       <div class="acts"><span class="lbtn on" onclick="грСвязать(${c.id})">✓ это она</span><span class="lbtn" onclick="грНеТа(${c.id})">не она</span><span class="lbtn" onclick="грРешить(${c.id},'ne_zapis')">не запись</span></div>`;
   else if (c.гр === 'ясно' || c.гр === 'выбрать') { const в = c.пред.варианты, выбр = ГР_ВАР[c.id] || 0, и = c.пред.имя;
     низ = (и && и.поОтвету ? `<div class="mu a" style="margin-top:6px">«${esc(и.поОтвету)}» — это ${esc(и.имя)} (по ответу в группе) · запомню · <span class="lnk" onclick="грКтоЭто(${c.id})">другой</span></div>`
          : '') + (и && и.имя ? `<div class="грим"><span class="mu">Кто</span><input list="грЛюди" data-gim="${c.id}" value="${esc(ГР_ИМ[c.id] != null ? ГР_ИМ[c.id] : и.имя)}" onchange="грИмяПоле(${c.id},this.value)">
            ${грНовый(c) ? '<span class="tag yl">новый</span>' : '<span class="tag gr">есть</span>'}</div>${и.новое && !и.поОтвету && и.похожие && и.похожие.length ? `<div class="mu" style="margin-top:3px">похожие: ${и.похожие.map(n => `<span class="lnk" onclick="грИмяПоле(${c.id},'${esc(n).replace(/'/g, "\\'")}')">${esc(n)}</span>`).join(', ')}</div>` : ''}` : '') +
-      в.map((x, i) => `<div class="opt ${i === выбр ? 'on' : ''}" onclick="ГР_ВАР[${c.id}]=${i};грРис()"><b>${esc(x.т)}</b><span class="mu">${esc(x.п)}</span></div>`).join('') +
-      `<div class="acts"><span class="lbtn on" onclick="грЗаписать(${c.id})">записать</span><span class="lbtn" onclick="грРешить(${c.id},'ne_zapis')">не запись</span></div>`; }
+      (в[выбр] && в[выбр].p && в[выбр].p.stroki.length === 2 ? `<div class="грим"><span class="mu">Клиенту, $</span><input inputmode="decimal" value="${esc(ГР_СУМ[c.id] != null ? String(ГР_СУМ[c.id]).replace('.', ',') : String(Math.abs(в[выбр].p.stroki[1].val === 'RUB' ? 0 : в[выбр].p.stroki[1].summa)).replace('.', ','))}" onchange="грСумПоле(${c.id},this.value)" ${в[выбр].p.stroki[1].val === 'RUB' ? 'disabled' : ''}>
+           <span class="mu">${ГР_СУМ[c.id] != null ? 'исправлено' : 'можно исправить'}</span></div>` : '') +
+      в.map((x, i) => `<div class="opt ${i === выбр ? 'on' : ''}" onclick="грВыбрать(${c.id},${i})"><b>${esc(x.т)}</b><span class="mu">${esc(x.п)}</span></div>`).join('') +
+      грЧек(c) + `<div class="acts"><span class="lbtn on" onclick="грЗаписать(${c.id})">записать</span><span class="lbtn" onclick="грРешить(${c.id},'ne_zapis')">не запись</span></div>`; }
+  else if (c.гр === 'другая') { const z = c.другая, s0 = (z.stroki || []).find(s => s.vid === 'kassa') || {};
+    низ = `<div class="pred" style="margin:8px 0 0">В группе <b>${ф(c.сумма, 2)}</b>, а в записи №${z.id} — <b>${ф(Math.abs(s0.summa), 2)}</b>${c.izm ? ` · сообщение изменено ${грВремя(c.izm)}` : ''}</div>${зап([z.id])}
+      <div class="acts"><span class="lbtn on" onclick="правка(${z.id})">поправить №${z.id}</span><span class="lbtn" onclick="грСвязатьПары([{msg:${c.id},zapisi:[${z.id}]}]).then(()=>выгрузка(true))">связать как есть</span><span class="lbtn" onclick="грДругаяНет(${c.id})">это другое</span></div>`; }
   else if (c.гр === 'вручную') низ = `<div class="mu y" style="margin-top:6px">${esc(c.пред.вручную)} — после записи свяжется само при следующей сверке</div>
       <div class="acts"><span class="lbtn" onclick="грРешить(${c.id},'ne_zapis')">не запись</span></div>`;
   else низ = `<div class="acts"><span class="lbtn" onclick="грРешить(${c.id},'novoe')">вернуть</span></div>`;
@@ -2453,11 +2495,32 @@ function грФайл() { const f = $('grF'); if (!f) return; f.onchange = async
   ГР_ЗАГР.новыеId = new Set(сп.filter(x => !ГР_СП.some(y => y.id === x.id)).map(x => x.id));
   тост(`Загружено: новых ${r.novyh}`); ГР_Ф = 'delo'; await выгрузка(true); }; }
 function грНовый(c) { const n = (ГР_ИМ[c.id] != null ? ГР_ИМ[c.id] : c.пред.имя.имя).trim().toLowerCase(); return !ГРС.scheta.some(s => s.vid === 'chelovek' && s.name.toLowerCase() === n); }
+function грЧек(c) {
+  const в = c.пред.варианты[ГР_ВАР[c.id] || 0]; if (!в) return '';
+  const вал = (sch, v) => v === 'RUB' || /^Касса (Москва|Карта)$/.test(sch) ? '₽' : /Тезер/.test(sch) ? 'USDT' : '$';
+  let стр = [];
+  if (в.ждёт) стр = [['К выдаче Ташкент', '+' + ф(c.сумма, 2) + ' $'], ['Касса Ташкент', '−' + ф(c.сумма, 2) + ' $']];
+  else if (в.выдал) стр = [['К выдаче Ташкент', '+' + ф(в.выдал.p_summa, 2) + ' $'], ['Касса Ташкент', '−' + ф(в.выдал.p_summa, 2) + ' $']];
+  else { const p = грСИменем(c, в); let итог = 0;
+    стр = p.stroki.map(st => { const v = вал(st.schet, st.val), usd = st.kurs ? st.summa / st.kurs : st.summa; if (!/^К выдаче/.test(st.schet) || true) итог += (st.schet.startsWith('Касса') || st.schet.startsWith('К выдаче')) ? usd : -usd;
+      return [кИмя(st.schet) + (st.val === 'RUB' && !/^Касса/.test(st.schet) ? ' ₽' : ''), (st.summa >= 0 ? '+' : '−') + ф(Math.abs(st.summa), v === '₽' ? 0 : 2) + ' ' + v + (st.kurs ? ' по ' + ф(st.kurs, st.kurs % 1 ? 4 : 0) : '')]; });
+    const пр = Math.round(итог * 100) / 100; if (Math.abs(пр) >= 0.01) стр.push(['Прибыль', (пр > 0 ? '+' : '−') + ф(Math.abs(пр), 2) + ' $']); }
+  return `<div class="chkg"><div class="mu">Запишется · время ${грВремя(c.at)} — как в группе</div>${стр.map(([а, б]) => `<div class="row"><span>${esc(а)}</span><b class="n ${/^\+/.test(б) ? 'p' : 'r'}">${б}</b></div>`).join('')}${в.ждёт ? '<div class="mu y">запишется сразу после своей заявки</div>' : ''}</div>`;
+}
+function грВыбрать(id, i) { ГР_ВАР[id] = i; ГР_ВЫБР[id] = 1; const c = ГР_СП.find(x => x.id === id); if (c && c.гр === 'выбрать') c.гр = 'ясно'; грРис(); }
+function грСумПоле(id, v) { const ч = число(v); if (ч > 0) ГР_СУМ[id] = ч; else delete ГР_СУМ[id]; грРис(); }
 function грИмяПоле(id, v) { ГР_ИМ[id] = String(v || '').trim(); грРис(); }
 // подставить выбранное имя в вариант записи
 function грСИменем(c, в) {
-  const старое = c.пред.имя && c.пред.имя.имя, новое = ГР_ИМ[c.id]; if (!старое || !новое || новое === старое || !в.p) return в.p;
-  const p = JSON.parse(JSON.stringify(в.p)), зам = x => typeof x === 'string' ? x.split(старое).join(новое) : x;
+  if (!в.p) return в.p;
+  const p = JSON.parse(JSON.stringify(в.p)), сум = ГР_СУМ[c.id];
+  if (сум && p.stroki.length === 2 && p.stroki[1].val !== 'RUB') {
+    p.stroki[1].summa = Math.sign(p.stroki[1].summa) * сум;
+    if (p.stroki[0].kurs) p.stroki[0].kurs = Math.round(Math.abs(p.stroki[0].summa) / сум * 1e6) / 1e6;       // рубли: курс под эту сумму
+    else if (Math.abs(Math.abs(p.stroki[0].summa) - сум) >= 0.005 && !p.istochnik) p.istochnik = 'usluga';     // доллары: разница — услуга
+  }
+  const старое = c.пред.имя && c.пред.имя.имя, новое = ГР_ИМ[c.id]; if (!старое || !новое || новое === старое) return p;
+  const зам = x => typeof x === 'string' ? x.split(старое).join(новое) : x;
   p.stroki.forEach(st => { if (st.schet === старое) st.schet = новое; else if (st.schet === старое + ' ₽') st.schet = новое + ' ₽'; });
   p.komu = зам(p.komu); p.note = зам(p.note); return p;
 }
@@ -2467,12 +2530,14 @@ async function грСвязатьПары(пары) { const r = await rpc('gr_sv
 async function грСвязать(id) { const c = ГР_СП.find(x => x.id === id); if (await грСвязатьПары([{ msg: id, zapisi: c.найдено.записи }])) выгрузка(true); }
 async function грСвязатьВсе(что) { const сп = ГР_СП.filter(c => c.гр === (что || 'найдено')).map(c => ({ msg: c.id, zapisi: c.найдено.записи }));
   const r = await грСвязатьПары(сп); if (r) { тост(`Сверено ${r.svyazano} · галочек поставлено ${r.galochek}`); await выгрузка(true); грДниЗакрыть(); } }
+function грДругаяНет(id) { const c = ГР_СП.find(x => x.id === id); c.другая = null; c.пред = грПредложить(c); c.гр = c.пред.вручную ? 'вручную' : c.пред.ясно ? 'ясно' : 'выбрать'; грРис(); }
 function грНеТа(id) { const c = ГР_СП.find(x => x.id === id); c.найдено = null; c.пред = грПредложить(c); c.гр = c.пред.вручную ? 'вручную' : 'выбрать'; грРис(); }
 async function грРешить(id, что) { const r = await rpc('gr_reshit', { p_token: ТОК, p_msg: id, p_chto: что }); if (!r || !r.ok) return тост((r && r.error) || 'Не вышло', true); выгрузка(true); }
 async function грБезОк(id) { await rpc('sig_ok_post', { p_token: ТОК, p_klyuch: 'bezgr:' + id }); ГРС.безСооб = ГРС.безСооб.filter(z => z.id !== id); (ГРС.бок = ГРС.бок || new Set()).add(id); грРис(); }
 // записать одно сообщение выбранным вариантом; время записи = время сообщения; повтор не задвоит (req)
 async function грЗаписатьОдно(c) {
   const в = c.пред.варианты[ГР_ВАР[c.id] || 0]; let r;
+  if (в.ждёт) return { ошибка: 'Сначала запиши заявку, на которую это ответ' };
   if (в.выдал) r = await rpc('vydal', Object.assign({ p_token: ТОК, p_at: c.at }, в.выдал));
   else { const p = грСИменем(c, в); r = await rpc('zapis', { p_token: ТОК, p: Object.assign({}, p, { at: c.at, req: 'grp:' + c.id, note: p.note || c.tekst.replace(/\n/g, ' ') }) }); }
   if (!r || !r.ok) return { ошибка: (r && r.error) || 'Не записано' };
@@ -2480,7 +2545,7 @@ async function грЗаписатьОдно(c) {
   if (c.пред.имя && c.пред.имя.кл && итогИмя && (c.пред.имя.новое || ГР_ИМ[c.id])) await rpc('gr_imya', { p_token: ТОК, p_psevdonim: c.пред.имя.кл, p_schet: итогИмя });
   const l = await грСвязатьПары([{ msg: c.id, zapisi: [r.id] }]); return l ? { id: r.id } : { ошибка: 'записано, но не связалось' };
 }
-async function грЗаписать(id) { const c = ГР_СП.find(x => x.id === id), r = await грЗаписатьОдно(c); if (r.ошибка) return тост(r.ошибка, true); тост('Записано · №' + r.id); await загрузить(); выгрузка(true); }
+async function грЗаписать(id) { const c = ГР_СП.find(x => x.id === id), r = await грЗаписатьОдно(c); if (r.ошибка) return тост(r.ошибка, true); тост('✓ Записано №' + r.id + ' · ' + грВремя(c.at) + ' · ушло в «Сверено»'); await загрузить(); выгрузка(true); }
 async function грЗаписатьЯсные() {
   const сп = ГР_СП.filter(c => c.гр === 'ясно').sort((a, b) => new Date(a.at) - new Date(b.at)); let ок = 0, плохо = 0;
   for (const c0 of сп) {                                   // по одному и по порядку: выдача ищет свою заявку среди уже записанных
@@ -2697,6 +2762,204 @@ function огСравнить() {
   $('огСр').innerHTML = `<div class="row mu" style="font-size:11.5px"><span style="flex:1">строка</span><span style="width:74px;text-align:right">у него</span><span style="width:74px;text-align:right">у нас</span><span style="width:64px;text-align:right">разница</span></div>` +
     ряд.map(x => { const d = x.его != null && x.наш != null ? x.наш - x.его : null, плохо = d == null || Math.abs(d) >= 1;
       return `<div class="row" style="font-size:13px"><span style="flex:1;min-width:0">${esc(x.имя)}</span><span class="n" style="width:74px;text-align:right">${x.его != null ? ф(x.его) : '—'}</span><span class="n" style="width:74px;text-align:right">${x.наш != null ? ф(x.наш) : '—'}</span><b class="n ${плохо ? 'r' : 'p'}" style="width:64px;text-align:right">${d == null ? 'нет' : Math.abs(d) < 1 ? '✓' : фз(d)}</b></div>`; }).join('');
+}
+
+// ===== 2.1 · «МОЯ МОСКВА»: касса оператора Москвы (видят и пишут он и админ; на общий учёт не влияет) =====
+let ММ = null, ММ_ИСТ = false;
+const ММ_СЧ = { nal_rub: 'Наличные ₽', karta: 'Карта ₽', nal_usd: 'Наличные $' };
+const ммВал = sch => sch === 'nal_usd' ? 'USD' : 'RUB';
+const ммЗн = v => v === 'USD' ? '$' : '₽';
+const ммИмя = c => String(c.имя || '').replace(/\+?\d[\d\s\-]{6,}/g, '').replace(/\s(одами(га)?)\b/gi, '').trim().replace(/(га|ga)$/i, '') || '—';
+const ммФ = (v, val) => ф(Math.abs(v), val === 'USD' ? 2 : 0) + ' ' + ммЗн(val);
+// суммы сообщения Москвы: [{val, s}] — s со знаком: + Москва получила, − отдала
+function ммСуммы(c) {
+  if (c.вид !== 'мск') return [];
+  const зн = c.знак || 1, о = [{ val: c.вал === 'RUB' ? 'RUB' : 'USD', s: зн * c.сумма }];
+  (c.доп || []).forEach(л => { const g = л.match(/^([+\-−]?)\s*(\d[\d.\s]*)/); if (!g) return; const v = ГР.числоГр(g[2].trim()); if (!isFinite(v) || !v) return;
+    const val = c.купили || /\$/.test(л) ? 'USD' : 'RUB'; о.push({ val, s: (g[1] === '-' || g[1] === '−' ? -1 : 1) * v }); });
+  return о;
+}
+function ммСчитать() {
+  const р = ММ, нал = { nal_rub: 0, karta: 0, nal_usd: 0 }, люди = {}, взято = {};
+  р.dv.forEach(d => {
+    if (d.vid === 'start') нал[d.schet] += +d.summa;
+    if (d.vid === 'vzyal') нал[d.schet] += +d.summa;
+    if (d.vid === 'otdal') нал[d.schet] -= +d.summa;
+    if (d.vid === 'perevod') { нал[d.schet] -= +d.summa; нал[d.schet2] += +d.summa; }
+    if (d.vid === 'dolg' && d.chelovek) { const к = d.chelovek + '|' + d.val; люди[к] = (люди[к] || 0) + (d.chto === 'ya' ? 1 : -1) * d.summa; }
+    if (d.vid !== 'dolg' && ['dolg', 'vernul'].includes(d.chto) && d.chelovek) { const к = d.chelovek + '|' + d.val; люди[к] = (люди[к] || 0) + (d.vid === 'vzyal' ? 1 : -1) * d.summa; }
+    if (d.msg) { const к = d.msg + '|' + d.val; (взято[к] = взято[к] || []).push(d); }
+  });
+  // сообщения группы: сколько ещё ждёт
+  const ждут = [], всеС = [];
+  р.soobsh.map(m => ГР.разбор({ id: m.id, at: m.at, ot: m.ot, text: m.tekst, reply: m.reply, izm: m.izm })).forEach(c => {
+    ммСуммы(c).forEach(x => {
+      const ч = взято[c.id + '|' + x.val] || [], было = ч.reduce((a, d) => a + +d.summa, 0), ост = Math.max(0, Math.round((Math.abs(x.s) - было) * 100) / 100);
+      ч.filter(d => d.vid === 'perenos').forEach(d => { const к = d.chelovek + '|' + d.val; люди[к] = (люди[к] || 0) + (x.s > 0 ? -1 : 1) * d.summa; });
+      const з = { c, val: x.val, s: x.s, было, ост, части: ч }; всеС.push(з); if (ост >= 0.005) ждут.push(з);
+    });
+  });
+  const ждР = ждут.filter(x => x.val === 'RUB').reduce((a, x) => a + Math.sign(x.s) * x.ост, 0), ждД = ждут.filter(x => x.val === 'USD').reduce((a, x) => a + Math.sign(x.s) * x.ост, 0);
+  const лР = Object.entries(люди).filter(([к]) => к.endsWith('|RUB')).reduce((a, [, v]) => a + v, 0), лД = Object.entries(люди).filter(([к]) => к.endsWith('|USD')).reduce((a, [, v]) => a + v, 0);
+  const расчР = нал.nal_rub + нал.karta, расчД = нал.nal_usd;
+  // по группе у тебя на руках должно быть: группа − ждут + я должен − мне должны
+  const надоР = р.gr.rub - ждР + лР, надоД = р.gr.usd - ждД + лД;
+  const пс = р.dv.filter(d => d.vid === 'pereschet'), послП = {}; пс.forEach(d => послП[d.schet] = d);
+  return { нал, люди, ждут, всеС, ждР, ждД, лР, лД, расчР, расчД, надоР, надоД, послП };
+}
+// расчётный остаток счёта на момент
+function ммНаМомент(sch, at) { let v = 0; ММ.dv.forEach(d => { if (new Date(d.at) > new Date(at) || d.vid === 'pereschet') return;
+  if (d.vid === 'start' && d.schet === sch) v += +d.summa; if (d.vid === 'vzyal' && d.schet === sch) v += +d.summa; if (d.vid === 'otdal' && d.schet === sch) v -= +d.summa;
+  if (d.vid === 'perevod') { if (d.schet === sch) v -= +d.summa; if (d.schet2 === sch) v += +d.summa; } }); return v; }
+
+async function мояМосква() {
+  const box = $('mmBox'); if (!ММ) box.innerHTML = '<div class="mu" style="padding:14px">Загружаю…</div>';
+  const r = await rpc('mm_sostoyanie', { p_token: ТОК }); if (!r || !r.ok) { box.innerHTML = `<div class="err">${esc((r && r.error) || 'Нет связи')}</div>`; return; }
+  ММ = r; ммРис();
+}
+function ммРис() {
+  const box = $('mmBox'), р = ММ;
+  if (!р.start) { box.innerHTML = р.adm ? ммНачалоФорма() : '<div class="card mu">Админ ещё не задал начало «Моей Москвы».</div>'; return; }
+  const к = ммСчитать(), пиш = р.pishet;
+  const возр = at => { const ч = (Date.now() - new Date(at)) / 36e5; return ч < 24 ? Math.max(1, Math.round(ч)) + ' ч' : Math.floor(ч / 24) + ' дн'; };
+  const ждHtml = к.ждут.slice().sort((a, b) => new Date(a.c.at) - new Date(b.c.at)).map(x => { const вх = x.s > 0, ч = (Date.now() - new Date(x.c.at)) / 864e5;
+    return `<div class="it"><div class="top"><span><b>${esc(ммИмя(x.c))}</b> · <span class="mu">${грВремя(x.c.at)} · <span class="${ч > 3 ? 'y' : ''}">ждёт ${возр(x.c.at)}</span></span></span><b class="n ${вх ? 'p' : 'r'}">${вх ? '+' : '−'}${ммФ(x.ост, x.val)}</b></div>
+      <div class="msg">${esc(x.c.tekst).replace(/\n/g, '<br>')}</div>
+      ${x.было ? `<div class="mu" style="margin-top:4px">${вх ? 'взял' : 'отдал'} ${ммФ(x.было, x.val)} из ${ммФ(Math.abs(x.s), x.val)}: ${x.части.map(d => деньРус(мскДень(d.at)) + ' ' + ммФ(d.summa, d.val) + (d.vid === 'perenos' ? ' в долг' : d.schet === 'karta' ? ' карта' : ' нал.')).join(' · ')}</div>` : ''}
+      ${пиш ? `<div class="acts"><span class="lbtn on" onclick="ммГр(${x.c.id},'${x.val}',${x.ост},'${x.val === 'USD' ? 'nal_usd' : 'nal_rub'}')">${вх ? 'Взял' : 'Отдал'} наличными</span>${x.val === 'RUB' ? `<span class="lbtn" onclick="ммГр(${x.c.id},'RUB',${x.ост},'karta')">${вх ? 'На карту' : 'С карты'}</span>` : ''}
+        <span class="lbtn" onclick="ммЧасть(${x.c.id},'${x.val}',${x.ост},${вх ? 1 : 0})">часть</span><span class="lbtn" onclick="ммПеренос(${x.c.id},'${x.val}',${x.ост},${вх ? 1 : 0})">остаток в долг</span></div>` : ''}</div>`; }).join('');
+  const люди = Object.entries(к.люди).filter(([, v]) => Math.abs(v) >= 0.005).sort((a, b) => b[1] - a[1]);
+  const стр = (а, б, кл, доп) => `<div class="row"><span>${а}${доп ? `<div class="mu">${доп}</div>` : ''}</span><b class="n ${кл || ''}">${б}</b></div>`;
+  const пс = sch => { const d = к.послП[sch]; if (!d) return ''; const расч = ммНаМомент(sch, d.at), раз = +d.summa - расч;
+    return `пересчитал ${грВремя(d.at)}: ${ммФ(d.summa, d.val)}${Math.abs(раз) >= (d.val === 'USD' ? 0.01 : 1) ? ` · <span class="${раз < 0 ? 'r' : 'y'}">${раз < 0 ? 'не хватало' : 'лишние'} ${ммФ(раз, d.val)}</span>` : ' · <span class="p">✓</span>'}`; };
+  const ст = (sch) => р.dv.filter(d => d.vid === 'start' && d.schet === sch).reduce((a, d) => a + +d.summa, 0);
+  const нач = { RUB: р.gr_start ? ст('nal_rub') + ст('karta') - р.gr_start.rub : 0, USD: р.gr_start ? ст('nal_usd') - р.gr_start.usd : 0 };
+  const свер = (vl, надо, есть, ж, л, гр) => { const раз = есть - надо, ок = Math.abs(раз) < (vl === 'USD' ? 0.01 : 1), н0 = нач[vl], за = раз - н0, мал = vl === 'USD' ? 0.01 : 1;
+    const жВ = к.ждут.filter(x => x.val === vl && x.s > 0).reduce((a, x) => a + x.ост, 0), жО = к.ждут.filter(x => x.val === vl && x.s < 0).reduce((a, x) => a + x.ост, 0);
+    return `${стр('По группе у Москвы', ммФ(гр, vl).replace(/^/, гр < 0 ? '−' : ''))}${жВ >= 0.005 ? стр('Ещё не взял по группе', '−' + ммФ(жВ, vl), 'y') : ''}${жО >= 0.005 ? стр('Ещё не отдал по группе', '+' + ммФ(жО, vl), 'y') : ''}
+      ${Math.abs(л) >= 0.005 ? стр(л > 0 ? 'Плюс: я должен людям' : 'Минус: мне должны люди', (л > 0 ? '+' : '−') + ммФ(л, vl), '', л > 0 ? 'эти деньги у тебя, но они чужие' : 'эти деньги наши, но не у тебя') : ''}
+      <div class="row"><b>На руках должно быть</b><b class="n">${надо < 0 ? '−' : ''}${ммФ(надо, vl)}</b></div>
+      <div class="row"><span>По твоим «взял / отдал»</span><b class="n">${есть < 0 ? '−' : ''}${ммФ(есть, vl)}</b></div>
+      <div class="tot"><span class="${ок ? 'p' : 'r'}">${ок ? 'Сходится ✓' : раз < 0 ? 'Не хватает' : 'Лишнее'}</span>${ок ? '' : `<span class="n r">${ммФ(раз, vl)}</span>`}</div>
+      ${!ок && Math.abs(н0) >= мал ? `<div class="mu" style="margin-top:4px">из них уже было на начало: ${н0 < 0 ? '−' : '+'}${ммФ(н0, vl)} · за время контура: ${Math.abs(за) < мал ? '0 ✓' : (за < 0 ? '−' : '+') + ммФ(за, vl)}</div>` : ''}`; };
+  const ист = р.dv.slice().reverse().filter(d => d.vid !== 'start').slice(0, ММ_ИСТ ? 300 : 12).map(d => {
+    const з = d.vid === 'vzyal' ? '+' : d.vid === 'otdal' ? '−' : '';
+    const что = { mne: 'мне должен', ya: 'я должен', gruppa: 'группа', dolg: d.vid === 'vzyal' ? 'взял в долг' : 'дал в долг', vernul: d.vid === 'vzyal' ? 'мне вернул' : 'я вернул', perevod: ММ_СЧ[d.schet] + ' → ' + ММ_СЧ[d.schet2], pereschet: 'пересчёт · ' + ММ_СЧ[d.schet], perenos: 'остаток в долг', prochee: 'прочее' }[d.chto] || d.chto;
+    return `<div class="row"><span>${грВремя(d.at)} · ${esc(d.chelovek || '')}${d.chelovek ? ' · ' : ''}${что}${d.schet && !['perevod', 'pereschet'].includes(d.chto) ? ' · ' + (d.schet === 'karta' ? 'карта' : 'нал.') : ''}<div class="mu">${esc(d.kto || '')}${d.note ? ' · ' + esc(d.note) : ''}</div></span>
+      <span style="text-align:right"><b class="n ${з === '+' ? 'p' : з === '−' ? 'r' : ''}">${з}${ммФ(d.summa, d.val)}</b>${пиш ? `<div class="lnk mu" onclick="ммОтм(${d.id})">отменить</div>` : ''}</span></div>`; }).join('');
+  box.innerHTML = `
+    ${пиш ? `<div class="g2" style="margin-top:10px"><button class="btn" style="margin:0" onclick="ммФорма('vzyal')">＋ Взял</button><button class="btn sec" style="margin:0" onclick="ммФорма('otdal')">− Отдал</button></div>` : ''}
+    <div class="card"><b>У меня сейчас</b>
+      ${стр('Наличные ₽', ммФ(к.нал.nal_rub, 'RUB'), к.нал.nal_rub < 0 ? 'r' : '', пс('nal_rub'))}
+      ${стр('Карта ₽', ммФ(к.нал.karta, 'RUB'), к.нал.karta < 0 ? 'r' : '', пс('karta'))}
+      ${стр('Наличные $', ммФ(к.нал.nal_usd, 'USD'), к.нал.nal_usd < 0 ? 'r' : '', пс('nal_usd'))}
+      ${пиш ? `<div class="acts"><span class="lbtn" onclick="ммПеревод()">⇄ Наличные ↔ карта</span><span class="lbtn" onclick="ммПересчёт()">✓ Пересчитал кассу</span></div>` : ''}</div>
+    <div class="card ${к.ждут.length ? 'sigc' : ''}"><b class="${к.ждут.length ? 'y' : ''}">Из группы — ждут · ${к.ждут.length}</b>${ждHtml || '<div class="mu" style="padding:6px 0">Всё из группы прошло через руки ✓</div>'}</div>
+    ${(() => { const мн = люди.filter(([, v]) => v < 0), я = люди.filter(([, v]) => v > 0), сум = (сп, val) => сп.filter(([кл]) => кл.endsWith('|' + val)).reduce((a, [, v]) => a + Math.abs(v), 0);
+      const итог = сп => [['RUB', '₽'], ['USD', '$']].map(([val]) => сум(сп, val)).some(x => x >= 0.005) ? [['RUB'], ['USD']].map(([val]) => сум(сп, val) >= 0.005 ? ммФ(сум(сп, val), val) : '').filter(Boolean).join(' · ') : '';
+      const ряд = ([кл, v]) => { const [н, val] = кл.split('|'); return `<div class="row" style="cursor:pointer" onclick="ммЧел('${esc(н).replace(/'/g, "\\'")}')"><span>${esc(н)} ›</span><b class="n ${v > 0 ? 'r' : 'p'}">${ммФ(v, val)}</b></div>`; };
+      return `<div class="card"><div class="top"><b>Мне должны</b><b class="n p">${итог(мн)}</b></div>${мн.map(ряд).join('') || '<div class="mu" style="padding:6px 0">никто</div>'}</div>
+        <div class="card"><div class="top"><b>Я должен</b><b class="n r">${итог(я)}</b></div>${я.map(ряд).join('') || '<div class="mu" style="padding:6px 0">никому</div>'}
+        ${пиш ? `<div class="acts"><span class="lbtn on" onclick="ммДолг()">＋ Долг без денег</span><span class="mu" style="align-self:center">старый долг, застрявшие деньги</span></div>` : ''}</div>`; })()}
+    <div class="card"><b>Сверка с группой · рубли</b>${свер('RUB', к.надоР, к.расчР, к.ждР, к.лР, р.gr.rub)}</div>
+    <div class="card"><b>Сверка с группой · доллары</b>${свер('USD', к.надоД, к.расчД, к.ждД, к.лД, р.gr.usd)}</div>
+    <div class="card"><b>История</b> <span class="mu">· с ${грВремя(р.start)}</span>${ист || '<div class="mu">пусто</div>'}
+      ${р.dv.filter(d => d.vid !== 'start').length > 12 ? `<div class="lnk" style="margin-top:8px" onclick="ММ_ИСТ=!ММ_ИСТ;ммРис()">${ММ_ИСТ ? 'свернуть' : 'вся история'}</div>` : ''}</div>
+    ${р.adm ? `<div class="mu" style="margin:8px 2px">Начало: ${грВремя(р.start)} · <span class="lnk" onclick="$('mmBox').innerHTML=ммНачалоФорма()">задать заново</span></div>` : ''}`;
+}
+function ммНачалоФорма() {
+  return `<div class="card"><b>Начало «Моей Москвы»</b><div class="mu" style="margin:4px 0 8px">С какого момента вести кассу оператора и что у него было на руках. Сообщения группы до этого момента не учитываются.</div>
+    <div class="two"><input id="mmD" type="date" value="${мскДень(Date.now())}"><input id="mmT" type="time" value="${мскВремя(Date.now())}"></div>
+    <div class="hint" style="margin-top:8px">Сейчас по группе у Москвы: <b>${ММ ? ф(ММ.gr.rub) + ' ₽ · ' + ф(ММ.gr.usd, 2) + ' $' : '—'}</b><div class="mu">наличные + карта + кто должен − кому должен должны давать столько на момент начала</div></div>
+    <label>Наличные ₽</label><input id="mmR" inputmode="decimal" placeholder="0"><label>Карта ₽</label><input id="mmK" inputmode="decimal" placeholder="0"><label>Наличные $</label><input id="mmU" inputmode="decimal" placeholder="0">
+    <button class="btn" onclick="ммНачало()">Сохранить начало</button></div>`;
+}
+async function ммНачало() {
+  const at = new Date($('mmD').value + 'T' + ($('mmT').value || '00:00') + ':00' + ПОЯС_С).toISOString();
+  const r = await rpc('mm_start', { p_token: ТОК, p_at: at, p_nal_rub: число($('mmR').value) || 0, p_nal_usd: число($('mmU').value) || 0, p_karta: число($('mmK').value) || 0 });
+  if (!r || !r.ok) return тост((r && r.error) || 'Не сохранилось', true); тост('Начало сохранено'); мояМосква();
+}
+async function ммЗап(p) { const r = await rpc('mm_zapis', { p_token: ТОК, p }); if (!r || !r.ok) { тост((r && r.error) || 'Не записано', true); return false; } тост('✓ Записано'); закрытьПравку(); await мояМосква(); return true; }
+function ммГр(msg, val, сумма, sch) { const c = ммСчитать().ждут.find(x => x.c.id === msg && x.val === val); if (!c) return;
+  ммЗап({ vid: c.s > 0 ? 'vzyal' : 'otdal', schet: sch, summa: сумма, chto: 'gruppa', msg, chelovek: ммИмя(c.c) }); }
+async function ммОтм(id) { if (!confirm('Отменить эту запись?')) return; const r = await rpc('mm_otmena', { p_token: ТОК, p_id: id }); if (!r || !r.ok) return тост((r && r.error) || 'Не вышло', true); мояМосква(); }
+// окно: общий вид формы с чеком
+function ммОкно(заг, тело, чек, кн, свой) {
+  $('mPr').classList.add('on');
+  $('mPrS').innerHTML = `<b style="font-size:17px">${заг}</b>${тело}<div class="chkg" id="mmЧ"></div><button class="btn" id="mmOk">${кн || 'Записать'}</button><button class="btn sec" onclick="закрытьПравку()">Закрыть</button>`;
+  const об = () => { const ч = чек(); $('mmЧ').innerHTML = ч.html; $('mmOk').disabled = !ч.p; $('mmOk').onclick = () => ч.p && (свой ? свой(ч.p) : ммЗап(ч.p)); };
+  $('mPrS').querySelectorAll('input,select').forEach(e => { e.oninput = об; e.onchange = об; });
+  $('mPrS').querySelectorAll('[data-g]').forEach(g => g.querySelectorAll('span').forEach(s => s.onclick = () => { g.querySelectorAll('span').forEach(x => x.classList.toggle('on', x === s)); об(); }));
+  об();
+}
+const ммВыб = g => { const e = $('mPrS').querySelector(`[data-g=${g}] span.on`); return e ? e.dataset.v : null; };
+const ммЛюди = () => [...new Set([...ММ.dv.map(d => d.chelovek).filter(Boolean)])].sort().map(n => `<option value="${esc(n)}">`).join('');
+function ммФорма(vid, имя, что) {
+  const вх = vid === 'vzyal';
+  ммОкно(вх ? '＋ Взял' : '− Отдал', `<datalist id="mmL">${ммЛюди()}</datalist>
+    <label>${вх ? 'У кого' : 'Кому'}</label><input id="mfK" list="mmL" placeholder="имя" value="${esc(имя || '')}">
+    <label>Сколько</label><div class="two"><input id="mfS" inputmode="decimal" placeholder="0"><div class="ch3" data-g="val" style="margin:0"><span class="on" data-v="RUB">₽</span><span data-v="USD">$</span></div></div>
+    <label>${вх ? 'Куда' : 'Откуда'}</label><div class="ch3" data-g="sch"><span class="on" data-v="nal">Наличные</span><span data-v="karta">Карта</span></div>
+    <label>Что это</label><div class="ch3" data-g="chto"><span class="${что === 'vernul' ? '' : 'on'}" data-v="dolg">${вх ? 'Взял в долг — верну' : 'Дал в долг'}</span><span class="${что === 'vernul' ? 'on' : ''}" data-v="vernul">${вх ? 'Он вернул долг' : 'Я вернул долг'}</span><span data-v="prochee">Прочее</span></div>
+    <label>Заметка</label><input id="mfN" placeholder="необязательно">`, () => {
+      const к = $('mfK').value.trim(), с = число($('mfS').value), val = ммВыб('val'), ч = ммВыб('chto'), sch = val === 'USD' ? 'nal_usd' : (ммВыб('sch') === 'karta' ? 'karta' : 'nal_rub');
+      if (val === 'USD' && ммВыб('sch') === 'karta') return { html: '<span class="r">Карта — только рубли</span>' };
+      if (!с) return { html: '<span class="mu">Впиши сумму</span>' }; if (ч !== 'prochee' && !к) return { html: '<span class="mu">Кто?</span>' };
+      const л = ч === 'prochee' ? '' : `<div class="row"><span>${esc(к)}</span><b class="n">${(ч === 'dolg') === вх ? 'я должен' : 'мне должен'} ${вх === (ч === 'dolg') ? '+' : '−'}${ммФ(с, val)}</b></div>`;
+      return { html: `<div class="row"><span>${ММ_СЧ[sch]}</span><b class="n ${вх ? 'p' : 'r'}">${вх ? '+' : '−'}${ммФ(с, val)}</b></div>${л}<div class="mu">На общий учёт и группу не влияет</div>`,
+        p: { vid, schet: sch, summa: с, chto: ч, chelovek: к || null, note: $('mfN').value } }; });
+}
+function ммЧасть(msg, val, ост, вх) {
+  ммОкно(вх ? 'Взял часть' : 'Отдал часть', `<label>Сколько <span class="mu">· осталось ${ммФ(ост, val)}</span></label><input id="mfS" inputmode="decimal" value="">
+    <label>${вх ? 'Куда' : 'Откуда'}</label><div class="ch3" data-g="sch"><span class="on" data-v="nal">Наличные</span>${val === 'RUB' ? '<span data-v="karta">Карта</span>' : ''}</div>`, () => {
+      const с = число($('mfS').value); if (!с) return { html: '<span class="mu">Впиши сумму</span>' };
+      if (с > ост + 0.005) return { html: `<span class="r">Больше, чем осталось (${ммФ(ост, val)})</span>` };
+      const sch = val === 'USD' ? 'nal_usd' : ммВыб('sch') === 'karta' ? 'karta' : 'nal_rub', c = ммСчитать().ждут.find(x => x.c.id === msg && x.val === val);
+      return { html: `<div class="row"><span>${ММ_СЧ[sch]}</span><b class="n ${вх ? 'p' : 'r'}">${вх ? '+' : '−'}${ммФ(с, val)}</b></div><div class="mu">после этого ждёт ${ммФ(ост - с, val)}</div>`,
+        p: { vid: вх ? 'vzyal' : 'otdal', schet: sch, summa: с, chto: 'gruppa', msg, chelovek: c ? ммИмя(c.c) : null } }; });
+}
+function ммПеренос(msg, val, ост, вх) { const c = ммСчитать().ждут.find(x => x.c.id === msg && x.val === val);
+  ммОкно('Остаток в долг', `<div class="mu" style="margin:4px 0">${вх ? 'Не принёс' : 'Не выдал'} ${ммФ(ост, val)} — сообщение закроется, остаток станет долгом в «Людях».</div><datalist id="mmL">${ммЛюди()}</datalist>
+    <label>Кто</label><input id="mfK" list="mmL" value="${esc(c ? ммИмя(c.c) : '')}">`, () => {
+      const к = $('mfK').value.trim(); if (!к) return { html: '<span class="mu">Кто?</span>' };
+      return { html: `<div class="row"><span>${esc(к)}</span><b class="n">${вх ? 'мне должен' : 'я должен'} ${ммФ(ост, val)}</b></div><div class="mu">касса не меняется</div>`,
+        p: { vid: 'perenos', val, summa: ост, chto: 'perenos', msg, chelovek: к } }; }); }
+function ммДолг(имя) {
+  ммОкно('＋ Долг', `<div class="mu" style="margin:4px 0">Без движения денег: старый долг, деньги у кого-то, застрявшие деньги.</div><datalist id="mmL">${ммЛюди()}</datalist>
+    <label>Кто</label><input id="mfK" list="mmL" value="${esc(имя || '')}" placeholder="имя или «Застряло»">
+    <div class="ch3" data-g="kto"><span class="on" data-v="mne">Он мне должен</span><span data-v="ya">Я ему должен</span></div>
+    <label>Сколько</label><div class="two"><input id="mfS" inputmode="decimal" placeholder="0"><div class="ch3" data-g="val" style="margin:0"><span class="on" data-v="RUB">₽</span><span data-v="USD">$</span></div></div>
+    <label>Заметка</label><input id="mfN" placeholder="например: по 86 = 5 000 $">`, () => {
+      const к = $('mfK').value.trim(), с = число($('mfS').value), val = ммВыб('val'), ч = ммВыб('kto');
+      if (!к) return { html: '<span class="mu">Кто?</span>' }; if (!с) return { html: '<span class="mu">Впиши сумму</span>' };
+      return { html: `<div class="row"><span>${esc(к)}</span><b class="n ${ч === 'mne' ? 'p' : 'r'}">${ч === 'mne' ? 'мне должен' : 'я должен'} ${ммФ(с, val)}</b></div><div class="mu">касса не меняется</div>`,
+        p: { vid: 'dolg', chto: ч, val, summa: с, chelovek: к, note: $('mfN').value } }; }); }
+function ммЧел(имя) {
+  const сп = ММ.dv.filter(d => d.chelovek === имя), к = ммСчитать();
+  $('mPr').classList.add('on');
+  $('mPrS').innerHTML = `<b style="font-size:17px">${esc(имя)}</b>
+    ${['RUB', 'USD'].map(val => { const v = к.люди[имя + '|' + val]; return v && Math.abs(v) >= 0.005 ? `<div class="row"><span>${v > 0 ? 'я должен' : 'мне должен'}</span><b class="n ${v > 0 ? 'r' : 'p'}">${ммФ(v, val)}</b></div>` : ''; }).join('')}
+    <div class="card" style="max-height:50vh;overflow:auto">${сп.slice().reverse().map(d => `<div class="row"><span>${грВремя(d.at)} · ${{ mne: 'мне должен', ya: 'я должен', dolg: d.vid === 'vzyal' ? 'взял в долг' : 'дал в долг', vernul: d.vid === 'vzyal' ? 'вернул мне' : 'я вернул', gruppa: 'группа', perenos: 'остаток в долг' }[d.chto] || d.chto}<div class="mu">${esc(d.note || '')}</div></span><b class="n">${ммФ(d.summa, d.val)}</b></div>`).join('') || '<div class="mu">пусто</div>'}</div>
+    ${ММ.pishet ? `<div class="acts"><span class="lbtn on" onclick="ммФорма('vzyal','${esc(имя).replace(/'/g, "\\'")}','vernul')">Он вернул</span><span class="lbtn" onclick="ммФорма('otdal','${esc(имя).replace(/'/g, "\\'")}','vernul')">Я вернул</span><span class="lbtn" onclick="ммДолг('${esc(имя).replace(/'/g, "\\'")}')">＋ долг</span></div>` : ''}
+    <button class="btn sec" onclick="закрытьПравку()">Закрыть</button>`;
+}
+function ммПеревод() {
+  ммОкно('⇄ Наличные ↔ карта', `<div class="ch3" data-g="nap"><span class="on" data-v="nk">Наличные → карта</span><span data-v="kn">Карта → наличные</span></div><label>Сколько, ₽</label><input id="mfS" inputmode="decimal">`, () => {
+    const с = число($('mfS').value); if (!с) return { html: '<span class="mu">Впиши сумму</span>' }; const nk = ммВыб('nap') === 'nk';
+    return { html: `<div class="row"><span>${nk ? 'Наличные ₽' : 'Карта ₽'}</span><b class="n r">−${ммФ(с, 'RUB')}</b></div><div class="row"><span>${nk ? 'Карта ₽' : 'Наличные ₽'}</span><b class="n p">+${ммФ(с, 'RUB')}</b></div>`,
+      p: { vid: 'perevod', schet: nk ? 'nal_rub' : 'karta', schet2: nk ? 'karta' : 'nal_rub', summa: с } }; }); }
+function ммПересчёт() { const к = ммСчитать();
+  ммОкно('✓ Пересчитал кассу', `<div class="mu" style="margin:4px 0">Сколько на самом деле. Ничего не меняет — только сравнивает с расчётом.</div>
+    <label>Наличные ₽ <span class="mu">· по расчёту ${ммФ(к.нал.nal_rub, 'RUB')}</span></label><input id="pR" inputmode="decimal">
+    <label>Карта ₽ <span class="mu">· по расчёту ${ммФ(к.нал.karta, 'RUB')}</span></label><input id="pK" inputmode="decimal">
+    <label>Наличные $ <span class="mu">· по расчёту ${ммФ(к.нал.nal_usd, 'USD')}</span></label><input id="pU" inputmode="decimal">`, () => {
+      const сп = [['nal_rub', 'pR', 'RUB'], ['karta', 'pK', 'RUB'], ['nal_usd', 'pU', 'USD']].filter(([, i]) => $(i).value.trim() !== '');
+      if (!сп.length) return { html: '<span class="mu">Впиши хотя бы одну сумму</span>' };
+      return { html: сп.map(([sch, i, val]) => { const ф_ = число($(i).value) || 0, р = ф_ - к.нал[sch];
+        return `<div class="row"><span>${ММ_СЧ[sch]}</span><b class="n ${Math.abs(р) < (val === 'USD' ? 0.01 : 1) ? 'p' : 'r'}">${Math.abs(р) < (val === 'USD' ? 0.01 : 1) ? 'сходится ✓' : (р < 0 ? 'не хватает ' : 'лишние ') + ммФ(р, val)}</b></div>`; }).join(''),
+        p: сп.map(([sch, i]) => ({ vid: 'pereschet', schet: sch, summa: число($(i).value) || 0 })) }; }, 'Сохранить пересчёт', async сп => {
+      for (const p of сп) { const r = await rpc('mm_zapis', { p_token: ТОК, p }); if (!r || !r.ok) return тост((r && r.error) || 'Не записано', true); }
+      тост('✓ Пересчёт сохранён'); закрытьПравку(); мояМосква(); });
 }
 
 $('btnPoisk').innerHTML = ЛУПА; $('btnPoisk').onclick = поискОкно;
