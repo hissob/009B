@@ -125,7 +125,7 @@ select.ks{background:var(--c2);color:var(--t);border:1px solid var(--l);border-r
 .eye{width:16px;height:16px;vertical-align:-3px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .vb{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(167,139,250,.12);border:1px solid var(--acc);color:var(--acc);border-radius:12px;padding:9px 12px;font-weight:800;font-size:13px;margin:0 0 10px}
 .vb button{background:var(--acc);color:#111;border:0;border-radius:9px;padding:5px 12px;font-weight:800;font-size:12px}
-.lbtn{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(167,139,250,.5);color:var(--acc);background:none;border-radius:10px;padding:4px 10px;font-size:12px;font-weight:800}
+.lbtn{cursor:pointer;user-select:none;-webkit-user-select:none;display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(167,139,250,.5);color:var(--acc);background:none;border-radius:10px;padding:4px 10px;font-size:12px;font-weight:800}
 .act{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.act button{padding:10px 8px;border-radius:12px;background:var(--c2);border:1px solid var(--l);font-weight:800;font-size:12.5px;color:var(--m);line-height:1.25}
 .act button i{display:block;font-style:normal;font-weight:600;font-size:11px;color:var(--m);opacity:.85;margin-top:2px}.act button.on{border-color:var(--ok);color:var(--ok);background:rgba(54,208,125,.08)}.act .w{grid-column:1/3}
 #tOtdel.pres #fTip,#tOtdel.pres #fVyd,#tOtdel.pres #fKuda,#tOtdel.pres #tTip,#tOtdel.pres #tKassa,#tOtdel.pres #tKassaL{display:none!important}#tOtdel.pres-zaim #fTip{display:flex!important}#tOtdel.pres-zaim #fTip button:nth-child(n+3){display:none}
@@ -299,7 +299,7 @@ details.card summary{cursor:pointer;list-style:none}
 
 <script>
 'use strict';
-const ВЕРСИЯ = '2.1.2';
+const ВЕРСИЯ = '2.1.3';
 const SB = 'https://lyxxbonoycdsulralmfg.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHhib25veWNkc3VscmFsbWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNzcyNTAsImV4cCI6MjEwMzc1MzI1MH0.bHKwEj7z94RKlPGGFGn6vB6W3Nlu99-psz9wvFefRis';
 const $ = id => document.getElementById(id);
@@ -2397,6 +2397,7 @@ function грКартаПоле(id, v) { ГР_КАРТА[id] = v; const c = ГР
 function грПара(м, т, ид) {
   if (!м || !т || м.вид !== 'мск' || м.вал !== 'RUB' || !м.курс || м.знак >= 0 || т.вид !== 'тшк' || т.знак <= 0 || т.тезер || т.стамбул || т.дубай || т.проц) return null;
   if (м.status !== 'novoe' || т.status !== 'novoe' || м.udaleno || т.udaleno || м.доп.length || м.тезер || м.стамбул || м.купили) return null;
+  if (грТочно(м) || грТочно(т)) return null;   // 2.1.3: человек есть в списке — две записи через его счёт: сколько дал и сколько получил
   const ожид = м.сумма / м.курс, разн = т.сумма - ожид, доп = Math.max(1, т.сумма * 0.001);
   if (разн < -доп || разн > т.сумма * 0.05) return null;                       // сильно не сходится — не пара
   const мелко = Math.abs(разн) <= доп, курс = мелко ? Math.round(м.сумма / т.сумма * 1e6) / 1e6 : м.курс, касса = грКасса({ id: ид }, м);
@@ -2410,6 +2411,10 @@ function грПара(м, т, ид) {
 const грВремя = at => деньРус(мскДень(at)) + ' ' + мскВремя(at);
 const грКлюч = имя => ГР.скелет(имя).join(' ');
 // имя из сообщения → счёт в программе: словарь, потом похожее имя среди людей, иначе новое
+// 2.1.3: человек точно есть в списке (словарь имён или то же имя) — без «похоже»
+function грТочно(c) { const ч = String(c.имя || '').replace(/\+?\d[\d\s\-]{6,}/g, '').replace(/(^|\s)(карта(га|дан)?|олдим)(?=\s|$)/gi, ' ').replace(/\s(ака|aka)$/i, '').replace(/\s+/g, ' ').trim(), кл = грКлюч(ч); if (!кл) return '';
+  if (ГРС.imena[кл]) return ГРС.imena[кл];
+  const л = ГРС.scheta.filter(s => s.vid === 'chelovek' && s.val !== 'RUB' && (s.name.toLowerCase() === ч.replace(/(га|ga)$/i, '').toLowerCase() || грКлюч(s.name) === кл)); return л.length === 1 ? л[0].name : ''; }
 function грИмя(c) {
   const чистое = String(c.имя || '').replace(/\+?\d[\d\s\-]{6,}/g, '').replace(/\s(одами(га)?|odami(ga)?)\b/gi, '').replace(/(aka|ака)$/i, '').replace(/\b(карта(га|дан)?|картага олдим|олдим)\b/gi, '').replace(/\s+/g, ' ').trim();
   const кл = грКлюч(чистое); if (!кл) return { имя: '', новое: true };
@@ -2417,6 +2422,7 @@ function грИмя(c) {
   const люди = ГРС.scheta.filter(s => s.vid === 'chelovek' && s.val !== 'RUB');
   const ровно = люди.filter(s => s.name.toLowerCase() === чистое.replace(/(га|ga)$/i, '').toLowerCase()); if (ровно.length === 1) return { имя: ровно[0].name, кл };
   const род0 = c.reply && ГР_СП.find(x => x.id === c.reply);                      // ответ на сообщение, где имя уже понятно
+  if (род0 && род0.вид && род0 !== c && род0.вид !== c.вид) { const и1 = грИмя(Object.assign({}, род0, { reply: null })); if (!и1.новое && и1.имя) return Object.assign({}, и1, { кл, поОтвету: и1.имя.toLowerCase() === чистое.toLowerCase() ? undefined : чистое }); }   // 2.1.3: ответ сильнее имени
   if (род0 && род0.вид && род0 !== c && ГР.похоже(чистое, род0.имя || '')) { const и0 = грИмя(Object.assign({}, род0, { reply: null })); if (!и0.новое || и0.имя) return Object.assign({}, и0, { кл }); }
   const точ = люди.filter(s => грКлюч(s.name) === кл), пох = точ.length ? точ : люди.filter(s => ГР.похоже(чистое, s.name));
   if (пох.length === 1) return { имя: пох[0].name, кл };
@@ -2451,6 +2457,8 @@ function грПредложить(c) {
     const род = c.reply && ГР_СП.find(x => x.id === c.reply && (x.вид === 'тшк' || x.вид === 'стб') && x.сумма);
     let usd = Math.round(c.сумма / c.курс), подгон = '';
     if (род && Math.abs(род.сумма - c.сумма / c.курс) / род.сумма < 0.01) { usd = род.сумма; подгон = `доллары из ответа: ${ф(usd)} $`; }
+    else { const отв2 = ГР_СП.find(x => x.reply === c.id && x.вид === 'тшк' && x.сумма && !x.тезер && Math.abs(x.сумма - c.сумма / c.курс) / x.сумма < 0.01);   // 2.1.3: и если Ташкент ответил на это сообщение — его доллары
+      if (отв2) { usd = отв2.сумма; подгон = `доллары из ответа Ташкента: ${ф(usd)} $`; } }
     const курс = Math.round(c.сумма / usd * 1e6) / 1e6, usd2 = usd;
     if (!подгон && Math.abs(курс - c.курс) > 1e-6) подгон = `округлено до ${ф(usd)} $`;
     const пк = подгон ? ` · курс ${ф(курс, 4)} (${подгон})` : '';
@@ -2498,8 +2506,14 @@ function грПредложить(c) {
     if (c.знак > 0 && c.reply) { const м = ГР_СП.find(x => x.id === c.reply), пр = грПара(м, c, c.id); if (пр) return { ясно: true, пара: м.id, варианты: [пр] }; }
     if (c.тезер) return c.знак > 0 ? { ясно: false, варианты: [{ к: 'tz', т: `Тезер → Ташкент ${ф(c.сумма, 2)} $`, п: 'USDT пришли долларами в кассу Ташкента, без прибыли', p: { tip: 'kassy', otdel: 'tashkent', note: c.tekst, stroki: [{ schet: 'Тезер', summa: -c.сумма }, { schet: 'Касса Ташкент', summa: c.сумма }] } }] } : { вручную: 'Тезер — запиши сам' };
     if (!имя) return { вручную: 'нет имени' };
+    if (c.проц >= 20 && c.знак > 0) {                       // 2.1.3: «+161.446/83» — Ташкент взял $, Москва выдаст ₽ по этому курсу
+      const руб = Math.round(c.сумма * c.проц), т = грТочно(c) || (!и.новое && имя);
+      const заяв = { к: 'vydM', т: `Выдать в Москве ${ф(руб)} ₽`, п: `заявка — Москва выдаст · ${ф(c.сумма, 2)} $ × ${ф(c.проц, 2)}`, p: { tip: 'prihod', otdel: 'tashkent', komu: имя, note: '📤 ' + имя + ' · в Москве', stroki: [{ schet: 'Касса Ташкент', summa: c.сумма }, { schet: 'Не занесено', summa: -руб, kurs: c.проц }] } };
+      const наСчёт = { к: 'vz', т: `Взял $ · ${имя}`, п: `Ташкент +${ф(c.сумма, 2)} $ на его счёт · рубли в Москве запишутся отдельно, когда выдадут`, p: { tip: 'prihod', otdel: 'tashkent', stroki: [{ schet: 'Касса Ташкент', summa: c.сумма }, { schet: имя, summa: c.сумма }] } };
+      return { ясно: !!т, имя: и, варианты: т ? [наСчёт, заяв] : [заяв, наСчёт] }; }
     if (c.проц) return { вручную: 'с процентом — запиши сам' };
-    if (c.знак < 0) { const з = грЗаявка(c, имя);
+    if (c.знак < 0) { const рО = c.reply && ГР_СП.find(x => x.id === c.reply && x.вид === 'мск' && x.знак > 0 && !(x.zapisi || []).length && ['ясно', 'выбрать'].includes(x.гр) && x.пред && (x.пред.варианты || []).some(v => v.к === 'vyd'));
+      const з = рО ? null : грЗаявка(c, имя);   // 2.1.3: ответ сильнее имени
       if (з) return { ясно: true, варианты: [{ к: 'vydal', т: `Выдал по заявке №${з.id} · ${ф(c.сумма, 2)} $`, п: (з.komu || имя) + ' · из кассы Ташкента', выдал: { p_id: з.id, p_iz: 'К выдаче Ташкент', p_kuda: 'Касса Ташкент', p_summa: c.сумма } }] };
       const род = c.reply && ГР_СП.find(x => x.id === c.reply && x.вид === 'мск' && x.знак > 0 && ['ясно', 'выбрать'].includes(x.гр) && x.пред && x.пред.варианты.some(v => v.к === 'vyd'));
       if (род) return { ясно: род.гр === 'ясно', послеЗаявки: род.id, варианты: [{ к: 'vydal0', т: `Выдал по заявке · ${ф(c.сумма, 2)} $`, п: `запишется сразу после заявки «${род.tekst.split('\n')[0].slice(0, 26)}»`, ждёт: род.id }] };
@@ -2560,7 +2574,9 @@ function грРазобрать() {
   оп.filter(c => c.гр === 'выбрать' && c.вид === 'тшк' && c.знак < 0 && c.reply).forEach(c => { c.пред = грПредложить(c); c.гр = c.пред.вручную ? 'вручную' : c.пред.ясно ? 'ясно' : 'выбрать'; });
   ГР_СП.filter(c => c.вид === 'непонятно' && c.status === 'novoe' && !c.udaleno).forEach(c => { c.гр = 'вручную'; c.пред = { вручную: 'не понял сообщение' }; });
   const занято = new Set([...связи.map(l => l.zapis), ...Object.values(найд).flatMap(x => x.записи)]);
-  ГРС.безСооб = с.zapisi.filter(z => z.status === 'живая' && new Date(z.at) > new Date(с.granica) && !занято.has(z.id) && !z.k_zapisi_авто);
+  const бок = new Set((с.bez_ok || []).map(Number));   // 2.1.3: «в порядке» запоминается в базе — после обновления не вылезает
+  ГРС.безСооб = с.zapisi.filter(z => z.status === 'живая' && new Date(z.at) > new Date(с.granica) && !занято.has(z.id) && !z.k_zapisi_авто && !бок.has(Number(z.id))
+    && (z.stroki || []).some(s => (счёт(s.schet) || {}).vid === 'kassa'));   // 2.1.3: без движения кассы («в прибыль», «остаток списан») — не спрашиваем
 }
 async function выгрузка(тихо) {
   const box = $('oVyg'); if (!тихо) box.innerHTML = '<div class="mu" style="padding:14px">Загружаю…</div>';
