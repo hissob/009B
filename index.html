@@ -151,6 +151,17 @@ select.ks{background:var(--c2);color:var(--t);border:1px solid var(--l);border-r
 #tMm .card>.top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 #tMm .tot{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--l);margin-top:6px;padding-top:10px;font-weight:800}
 .chkg{background:var(--c2);border-radius:12px;padding:8px 11px;margin-top:8px}.chkg .row{padding:4px 0;font-size:13px}
+.pkV .chip{display:inline-block;font-size:12px;font-weight:800;padding:4px 10px;border-radius:20px;background:rgba(167,139,250,.15);color:var(--acc)}
+.pkV .sum{font-size:21px;font-weight:800;margin:10px 0 2px}.pkSt{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 13px;background:var(--c2);border-radius:14px;margin-top:9px}
+.pkSt .lb{font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:800}.pkSt .im{font-size:16px;font-weight:700;margin-top:2px}.pkSt .sm{font-size:15px;font-weight:800;text-align:right;white-space:nowrap}
+.pkKn{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.pkKn.dva{grid-template-columns:1fr 1fr}.pkKn button{background:var(--c2);border:1.5px solid var(--l);border-radius:16px;padding:13px 4px;text-align:center;font-weight:800;font-size:13px;cursor:pointer;color:var(--t)}
+.pkKn button i{font-style:normal;font-size:21px;display:block;margin-bottom:5px}.pkIz{margin-top:12px;padding:11px 13px;border:1px dashed var(--l);border-radius:14px;font-size:13px;color:var(--m)}
+.pkOt{margin-top:12px;padding:14px;border-radius:16px;border:1.5px solid rgba(248,113,113,.5);color:var(--bad);text-align:center;font-weight:800;cursor:pointer}
+.pkDe{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:16px}.pkDe button{padding:15px;border-radius:16px;border:none;font-weight:800;font-size:15px;cursor:pointer;background:var(--c2);color:var(--t)}.pkDe button.da{background:var(--acc);color:#111}
+.pkHd{display:none!important}.pkT{font-size:16px;font-weight:800;margin-bottom:8px}
+.pchips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}.pchips button{border:1px solid var(--l);background:var(--c);color:var(--t);border-radius:999px;padding:9px 14px;font-weight:700;font-size:14px;cursor:pointer}
+.pchips button.on{background:var(--acc);border-color:var(--acc);color:#111}.pgrp{border-left:3px solid var(--acc);padding-left:10px;margin-top:6px}
+#e_it .row,#ppIt .row{flex-wrap:wrap}#e_it .n,#ppIt .n{white-space:normal;overflow-wrap:anywhere;min-width:0;text-align:right}.sheet{overflow-x:hidden}
 .грим{display:flex;gap:8px;align-items:center;margin-top:8px}.грим input{flex:1;padding:7px 10px;margin:0}.грим .mu{font-size:12px}
 .grz{font-size:12.5px;color:var(--t);padding:6px 0 0;cursor:pointer}.grz::before{content:'→ ';color:var(--acc);font-weight:800}
 .sigc{border-color:rgba(245,196,81,.55)}.sigc .it{padding:11px 0;border-top:1px solid var(--l);margin-top:10px}
@@ -288,7 +299,7 @@ details.card summary{cursor:pointer;list-style:none}
 
 <script>
 'use strict';
-const ВЕРСИЯ = '2.1.1';
+const ВЕРСИЯ = '2.1.2';
 const SB = 'https://lyxxbonoycdsulralmfg.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHhib25veWNkc3VscmFsbWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNzcyNTAsImV4cCI6MjEwMzc1MzI1MH0.bHKwEj7z94RKlPGGFGn6vB6W3Nlu99-psz9wvFefRis';
 const $ = id => document.getElementById(id);
@@ -957,7 +968,7 @@ function заголовок(x) {
   if (люди.length) return люди.join(', ');
   if (/^tezer/.test(x.tip)) return x.tip === 'tezer_kupili' ? 'Тезер купили' : 'Тезер продали';
   const к = x.stroki.filter(s => s.vid === 'kassa');
-  return к.length > 1 ? 'Перевод ' + к.map(s => кИмя(s.schet)).join(' → ') : (x.note || '№' + x.id);
+  return к.length > 1 ? (x.komu ? x.komu + ' · ' : 'Перевод ') + к.map(s => кИмя(s.schet)).join(' → ') : (x.note || '№' + x.id);
 }
 function деталь(x, своиКассы) {
   return x.stroki.filter(s => s.vid === 'kassa').map(s => {
@@ -1310,6 +1321,70 @@ function простая(r) {
   const с = r.stroki.filter(s => s.vid !== 'pribyl');
   return с.length === 2 && с.filter(s => s.vid === 'kassa').length === 1 && с.filter(s => s.vid === 'chelovek').length === 1;
 }
+// 2.1.2 · «Что изменить?» — сначала выбираешь, что править; кнопка «Сохранить» и чек — только когда что-то изменилось
+let ПР_СНИМ = '';
+const правкаСнимок = () => [...$('mPrS').querySelectorAll('.pgrp input,.pgrp select')].map(i => i.id + '=' + i.value).join('|') + '|' + [...$('mPrS').querySelectorAll('.pgrp .seg .on')].map(b => b.parentElement.id + ':' + (b.dataset.z || b.dataset.n || '')).join('|');
+function правкаЧипы(группы, послеЭл, чек, кнопка, допЭл, сохр) {      // 2.1.2: как в Кассе 009 — карточка, кнопки, один экран, проверка
+  const r = ПР, Ш = $('mPrS');
+  группы = группы.filter(g => g.эл.filter(Boolean).length);
+  const ред = document.createElement('div'); ред.id = 'pkE';
+  группы.forEach(g => { const w = document.createElement('div'); w.className = 'pgrp'; w.dataset.k = g.k; g.эл.filter(Boolean).forEach(e => w.appendChild(e)); ред.appendChild(w); });
+  const пров = document.createElement('div'); пров.id = 'pkC';
+  [...(допЭл || []), чек, Ш.querySelector('#e_err,#ppErr')].filter(Boolean).forEach(e => пров.appendChild(e));
+  const старое = [...Ш.children];
+  // старое (заголовок, пустые рамки, старые кнопки) — прячем; цепочка, история, таймер — остаются на карточке
+  старое.forEach(e => { if (!(e.id === 'cpB' || /История правок/.test(e.textContent || '') && e.classList.contains('card') || e.classList.contains('note'))) e.classList.add('pkHd'); });
+  if (кнопка) кнопка.classList.add('pkHd');
+  // карточка
+  const стр = r.stroki.filter(x => x.vid !== 'pribyl'), пр = r.stroki.filter(x => x.vid === 'pribyl').reduce((a, x) => a + Number(x.summa), 0);
+  const гл = стр.find(x => x.vid === 'kassa') || стр[0];
+  const кому = ((ЛЕНТА || []).concat((ВЫП && ВЫП.zapisi) || []).find(z => z.id === r.id) || {}).komu || '';
+  const сумТ = x => фз(x.summa, x.val === 'RUB' ? 0 : 2) + ' ' + ВАЛ[x.val] + (x.kurs ? ' <span class="mu">по ' + ф(x.kurs, 2) + '</span>' : '');
+  let h = `<span class="chip">${esc(заголовок(r))}</span>
+    <div class="sum">${гл ? ф(Math.abs(гл.summa), гл.val === 'RUB' ? 0 : 2) + ' ' + ВАЛ[гл.val] + (гл.kurs ? ' × ' + ф(гл.kurs, 2) + ' = ' + ф(Math.abs(гл.summa / гл.kurs), 2) + ' $' : '') : ''}</div>
+    <div class="mu">№${r.id} · ${деньРус(мскДень(r.at))} ${мскВремя(r.at)} · записал ${esc(r.kto)}${r.status === 'отменена' ? ' · <b class="r">отменена</b>' : ''}</div>`;
+  if (кому && !стр.some(x => x.vid === 'chelovek')) h += `<div class="pkSt"><div><div class="lb">кто</div><div class="im">${esc(кому)}</div></div></div>`;
+  стр.forEach(x => { h += `<div class="pkSt"><div><div class="lb">${x.vid === 'kassa' ? (x.summa > 0 ? 'касса · пришло' : 'касса · ушло') : (x.summa > 0 ? 'человек · мы должны' : 'человек · он должен')}</div><div class="im">${esc(x.vid === 'kassa' ? кИмя(x.schet) : x.schet)}</div></div><div class="sm ${x.summa > 0 ? 'p' : 'r'}">${сумТ(x)}</div></div>`; });
+  if (Math.abs(пр) >= 0.01 && д_('zp', 'pribyl')) h += `<div class="pkSt"><div><div class="lb">прибыль</div><div class="im">услуга / разница</div></div><div class="sm ${пр > 0 ? 'p' : 'r'}">${фз(пр, 2)} $</div></div>`;
+  const ик = { kto: '👤', sum: '💰', ks: '🏦', dt: '📅', no: '✎' };
+  const кн = группы.filter(g => g.k !== 'no');
+  if (кн.length) h += `<div class="pkKn${кн.length === 2 || кн.length === 4 ? ' dva' : ''}">` + кн.map(g => `<button type="button" data-k="${g.k}"><i>${ик[g.k] || '✎'}</i>${g.т}</button>`).join('') + '</div>';
+  if (группы.some(g => g.k === 'no')) h += `<div class="pkIz">Комментарий: <b style="color:var(--t)">${esc(r.note || '—')}</b> · <span style="color:var(--acc);cursor:pointer" data-k="no">изменить</span></div>`;
+  if (r.pravo.ok && r.status !== 'отменена') h += '<div class="pkOt" id="pkOtm">Отменить запись</div>';
+  const кар = document.createElement('div'); кар.className = 'pkV'; кар.innerHTML = h;
+  const нав = document.createElement('div'); нав.className = 'pkDe'; нав.id = 'pkN';
+  const закр = document.createElement('div'); закр.className = 'pkDe'; закр.style.gridTemplateColumns = '1fr'; закр.innerHTML = '<button onclick="закрытьПравку()">Закрыть</button>';
+  const загТ = document.createElement('div'); загТ.className = 'pkT';
+  Ш.prepend(закр); Ш.prepend(нав); Ш.prepend(пров); Ш.prepend(ред); Ш.prepend(загТ); Ш.prepend(кар);
+  const хвост = Ш.querySelector('#cpB'); const ист = [...Ш.children].find(e => e.classList.contains('card') && /История правок/.test(e.textContent || ''));
+  [ист, хвост].filter(Boolean).forEach(e => закр.before(e));
+  ПР_СНИМ = правкаСнимок();
+  let экран = 'card', текК = '';
+  const вид = (э, k) => { экран = э; текК = k || текК;
+    кар.style.display = э === 'card' ? '' : 'none'; закр.style.display = э === 'card' ? '' : 'none';
+    [хвост, ист].filter(Boolean).forEach(e => e.style.display = э === 'card' ? '' : 'none');
+    ред.style.display = э === 'edit' ? '' : 'none'; ред.querySelectorAll('.pgrp').forEach(w => w.style.display = w.dataset.k === текК ? '' : 'none');
+    пров.style.display = э === 'check' ? '' : 'none';
+    const гр = группы.find(g => g.k === текК); загТ.style.display = э === 'card' ? 'none' : '';
+    загТ.innerHTML = э === 'edit' ? `${ик[текК] || '✎'} ${гр ? гр.т : ''} <span class="mu">· №${r.id}</span>` : `Проверь <span class="mu">· было → стало · №${r.id}</span>`;
+    нав.style.display = э === 'card' ? 'none' : '';
+    нав.innerHTML = э === 'edit' ? '<button data-n="card">Назад</button><button class="da" data-n="check">Дальше →</button>' : '<button data-n="edit">Назад</button><button class="da" data-n="save">Сохранить</button>';
+    нав.querySelectorAll('button').forEach(b => b.onclick = () => {
+      if (b.dataset.n === 'check' && правкаСнимок() === ПР_СНИМ) return тост('Ничего не изменилось', true);
+      if (b.dataset.n === 'save') { b.disabled = true; b.textContent = 'Сохраняю…'; Promise.resolve(сохр()).finally(() => { b.disabled = false; b.textContent = 'Сохранить'; }); return; }
+      вид(b.dataset.n);
+      if (b.dataset.n === 'check') Ш.querySelectorAll('input').forEach(i => i.dispatchEvent(new Event('input')));
+    });
+    if (э === 'edit') { const i = ред.querySelector(`.pgrp[data-k="${текК}"] input:not([type=date]):not([type=time]), .pgrp[data-k="${текК}"] select`); if (i) setTimeout(() => i.focus(), 50); }
+    Ш.scrollTop = 0; };
+  кар.querySelectorAll('[data-k]').forEach(b => b.onclick = () => вид('edit', b.dataset.k));
+  if ($('pkOtm')) $('pkOtm').onclick = async () => { const э = $('pkOtm');
+    if (э.dataset.раз !== '1') { э.dataset.раз = '1'; э.textContent = 'Нажми ещё раз — отменить запись №' + r.id; setTimeout(() => { if ($('pkOtm')) { э.dataset.раз = ''; э.textContent = 'Отменить запись'; } }, 4000); return; }
+    const о = await rpc('otmena', { p_token: ТОК, p_id: r.id }); if (!о || !о.ok) return тост((о && о.error) || 'Не отменено', true);
+    тост('Отменено'); закрытьПравку(); await загрузить(); обновитьЭкран(); };
+  вид('card');
+}
+const сЛейблом = e => e ? [e.previousElementSibling && e.previousElementSibling.tagName === 'LABEL' ? e.previousElementSibling : null, e] : [];
 function правкаПростая(r) {
   const к = r.stroki.find(s => s.vid === 'kassa'), ч = r.stroki.find(s => s.vid === 'chelovek');
   const пр = r.stroki.filter(s => s.vid === 'pribyl').reduce((a, s) => a + Number(s.summa), 0);
@@ -1351,6 +1426,14 @@ function правкаПростая(r) {
     $('ppK').addEventListener('input', () => { if ($('ppK').value) $('ppX').value = ''; }); }
   $('mPrS').querySelectorAll('input').forEach(i => i.addEventListener('input', ппПересчёт));
   ппПересчёт();
+  const обёртка = $('ppS').closest('.two') || $('ppS').parentElement.parentElement;
+  правкаЧипы([
+    { k: 'kto', т: 'Кто', эл: сЛейблом($('ppKto')) },
+    { k: 'sum', т: 'Сумма и курс', эл: [...сЛейблом($('ppT')), обёртка, ...сЛейблом($('ppX')), ...сЛейблом($('ppU'))] },
+    { k: 'ks', т: 'Касса', эл: сЛейблом($('ppKs')) },
+    { k: 'dt', т: 'Дата и время', эл: [$('mPrS').querySelector('.dt')] },
+    { k: 'no', т: 'Комментарий', эл: [...сЛейблом($('ppNo')), ...сЛейблом($('ppTel'))] }
+  ], $('mPrS').querySelector('b').nextElementSibling, $('ppIt'), $('ppSave'), [], ппСохранить);
 }
 function ппСобрать() {
   const P = ПП, T = +($('ppT').querySelector('.on') || { dataset: { z: 1 } }).dataset.z, имя = $('ppKto').value.trim(), с = число($('ppS').value);
@@ -1409,6 +1492,8 @@ async function правка(id) {
       ${s.vid === 'chelovek' ? `<div><input id="e_n${i}" value="${esc(s.schet)}" ${r.pravo.ok ? '' : 'disabled'}></div>` : ''}
       <div${s.vid === 'chelovek' ? '' : ' style="grid-column:1/' + (s.kurs ? '2' : '3') + '"'}><input id="e_s${i}" inputmode="decimal" value="${ф(Math.abs(s.summa), 2)}" ${r.pravo.ok ? '' : 'disabled'}></div>
       ${s.kurs ? `<div><input id="e_k${i}" inputmode="decimal" value="${String(+s.kurs).replace('.', ',')}" ${r.pravo.ok ? '' : 'disabled'}></div>` : ''}</div>`).join('');
+  const кому0 = ((ЛЕНТА || []).concat((ВЫП && ВЫП.zapisi) || []).find(z => z.id === r.id) || {}).komu || '';
+  if (!стр.some(s => s.vid === 'chelovek')) h += `<label>Кто <span class="mu">· имя в ленте и в истории</span></label><input id="e_kto" list="e_ktoL" value="${esc(кому0)}" data-bylo="${esc(кому0)}" placeholder="например: Садриддин" ${r.pravo.ok ? '' : 'disabled'}><datalist id="e_ktoL">${СЧЕТА.filter(x => x.vid === 'chelovek').map(x => `<option value="${esc(основа(x.name))}">`).join('')}</datalist>`;
   h += `<div class="dt"><div><label>Дата</label><input id="e_d" type="date" value="${мскДень(r.at)}" ${r.pravo.ok ? '' : 'disabled'}></div><div><label>Время</label><input id="e_t" type="time" value="${мскВремя(r.at)}" ${r.pravo.ok ? '' : 'disabled'}></div></div>
     <label>Комментарий</label><input id="e_no" value="${esc(r.note || '')}" ${r.pravo.ok ? '' : 'disabled'}>
     ${r.pravo.ok ? '<label>Причина правки или отмены <span class="mu">(необязательно · в журнал)</span></label><input id="e_pr" placeholder="например: не тот курс">' : ''}
@@ -1425,6 +1510,12 @@ async function правка(id) {
   $('mPrS').querySelectorAll('input:not([inputmode])').forEach(i => i.addEventListener('input', правкаПересчёт));
   $('mPrS').querySelectorAll('select.ks').forEach(i => i.addEventListener('change', правкаПересчёт));
   правкаПересчёт();
+  if (r.pravo.ok) правкаЧипы([
+    { k: 'kto', т: 'Кто', эл: сЛейблом($('e_kto')) },
+    { k: 'sum', т: 'Суммы, курс, касса', эл: [...$('mPrS').querySelectorAll('.str')] },
+    { k: 'dt', т: 'Дата и время', эл: [$('mPrS').querySelector('.dt')] },
+    { k: 'no', т: 'Комментарий', эл: [...сЛейблом($('e_no')), ...сЛейблом($('e_tel'))] }
+  ], $('mPrS').querySelector('b').nextElementSibling || $('mPrS').querySelector('b'), $('e_it'), $('e_save'), сЛейблом($('e_pr')), правкаСохранить);
   clearInterval(ПР_ТАЙМ);
   if (r.pravo.svoya) { const конец = Date.now() + r.pravo.ostalos_sek * 1000; const тик = () => { const о = Math.max(0, Math.round((конец - Date.now()) / 1000)); if ($('e_tm')) $('e_tm').textContent = о ? `⏱ твоя запись — можно исправить ещё ${Math.floor(о / 60)}:${String(о % 60).padStart(2, '0')}` : '🔒 время вышло'; if (!о) clearInterval(ПР_ТАЙМ); }; тик(); ПР_ТАЙМ = setInterval(тик, 1000); }
 }
@@ -1464,14 +1555,19 @@ function правкаПересчёт() {
   const стр = правкаСтроки(); let касс = 0, люд = 0;
   for (const s of стр) { const v = s.kurs ? s.summa / s.kurs : s.summa; if ((счёт(s.schet) || { vid: 'chelovek' }).vid === 'kassa') касс += v; else люд += v; }
   const пр = касс - люд, было = (ПР.stroki.find(s => s.vid === 'pribyl') || { summa: 0 }).summa;
-  $('e_it').innerHTML = `<div class="row"><span>Было</span><span class="n mu">${esc(сводка(ПР))}</span></div>
-    <div class="row"><span>Станет</span><span class="n">${esc(стр.map(s => (счёт(s.schet) && счёт(s.schet).vid === 'kassa' ? кИмя(s.schet) : s.schet) + ' ' + фз(s.summa, 2) + (s.kurs ? '/' + ф(s.kurs, 2) : '')).join(' · '))}</span></div>
-    ${д_('zp', 'pribyl') ? `<div class="row"><span>Прибыль записи</span><span class="n"><span class="mu" style="text-decoration:line-through">${фз(было, 2)}</span> → <span class="${пр > 0.004 ? 'p' : пр < -0.004 ? 'r' : ''}">${фз(пр, 2)} $</span></span></div>` : ''}`;
+  const кл = a => JSON.stringify(a.map(s => [s.schet, +(+s.summa).toFixed(2), s.kurs ? +(+s.kurs).toFixed(6) : null]));
+  const тоЖе = кл(ПР.stroki.filter(s => s.vid !== 'pribyl')) === кл(стр);
+  const ктоИзм = $('e_kto') && $('e_kto').value.trim() !== $('e_kto').dataset.bylo;
+  $('e_it').innerHTML = (ктоИзм ? `<div class="row"><span>Кто</span><span class="n"><span class="mu" style="text-decoration:line-through">${esc($('e_kto').dataset.bylo || '—')}</span> → <b>${esc($('e_kto').value.trim() || '—')}</b></span></div>` : '') + `
+    ${тоЖе ? '' : '<div class="row"><span>Было</span><span class="n mu">' + esc(сводка(ПР)) + '</span></div>'}${тоЖе ? '' : `<div class="row"><span>Станет</span><span class="n">${esc(стр.map(s => (счёт(s.schet) && счёт(s.schet).vid === 'kassa' ? кИмя(s.schet) : s.schet) + ' ' + фз(s.summa, 2) + (s.kurs ? '/' + ф(s.kurs, 2) : '')).join(' · '))}</span></div>`}
+    ${д_('zp', 'pribyl') && !тоЖе ? `<div class="row"><span>Прибыль записи</span><span class="n"><span class="mu" style="text-decoration:line-through">${фз(было, 2)}</span> → <span class="${пр > 0.004 ? 'p' : пр < -0.004 ? 'r' : ''}">${фз(пр, 2)} $</span></span></div>` : ''}`;
 }
 async function правкаСохранить() {
   const кн = $('e_save'); кн.disabled = true; кн.textContent = 'Сохраняю…';
   const at = $('e_d').value + 'T' + ($('e_t').value || '12:00') + ':00' + ПОЯС_С;
-  const r = await rpc('pravka', { p_token: ТОК, p_id: ПР.id, p: { at, note: $('e_no').value, telefon: телФ($('e_tel').value), stroki: правкаСтроки() } });
+  const p = { at, note: $('e_no').value, telefon: телФ($('e_tel').value), stroki: правкаСтроки() };
+  if ($('e_kto') && $('e_kto').value.trim() !== $('e_kto').dataset.bylo) p.komu = $('e_kto').value.trim();   // 2.1.2
+  const r = await rpc('pravka', { p_token: ТОК, p_id: ПР.id, p });
   кн.disabled = false; кн.textContent = 'Сохранить';
   if (!r || !r.ok) { $('e_err').textContent = (r && r.error) || 'Не сохранено'; return; }
   тост('Исправлено' + (д_('zp', 'pribyl') && Math.abs(r.pribyl) >= 0.01 ? ' · прибыль ' + фз(r.pribyl, 2) + ' $' : '')); закрытьПравку(); await загрузить(); обновитьЭкран();
